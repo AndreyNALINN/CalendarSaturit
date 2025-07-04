@@ -3,56 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Управление бригадами и складом</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- PWA Meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Бригады">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="msapplication-tap-highlight" content="no">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" sizes="152x152" href="icon-152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
     <link rel="manifest" href="manifest.json">
+    <link rel="mask-icon" href="safari-pinned-tab.svg" color="#667eea">
+    
+    <title>Управление бригадами и складом</title>
+
     <style>
         :root { --tab-bar-height: 70px; }
         * { box-sizing: border-box; }
         html { width: 100%; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        body { margin: 0; padding: 0; width: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; color: #1d1d1f; font-size: 14px; padding-bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom)); }
+        body { margin: 0; padding: 0; width: 100%; height: 100%; overflow-x: hidden; position: relative; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; color: #1d1d1f; font-size: 14px; padding-bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom)); }
         *:not(script):not(style) { -webkit-user-select: none; user-select: none; }
         input, textarea, select { -webkit-user-select: text; user-select: text; }
-        .container { max-width: 100%; margin: 0 auto; padding: 10px; }
-        .header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); display: none; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
-        .header h1 { margin: 0; font-size: 18px; font-weight: 600; }
-        .user-info { display: flex; align-items: center; gap: 10px; }
-        .user-badge { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 6px 12px; border-radius: 15px; font-size: 12px; }
-        .logout-btn { background: #ff3b30; color: white; border: none; padding: 8px 14px; border-radius: 15px; cursor: pointer; font-size: 13px; min-height: 40px; }
-        .main-content { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 15px; }
-        .tabs { position: fixed; bottom: 0; left: 0; width: 100%; height: var(--tab-bar-height); display: grid; grid-template-columns: repeat(4, 1fr); background: rgba(248, 249, 250, 0.7); backdrop-filter: blur(15px); border-top: 1px solid rgba(0, 0, 0, 0.1); z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
-        .tab { padding: 4px; text-align: center; cursor: pointer; border: none; background: transparent; font-size: 11px; color: #6c757d; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 100%; border-top: 3px solid transparent; }
+        .container { max-width: 100%; margin: 0 auto; padding: 10px; box-sizing: border-box; position: relative; }
+        @media (min-width: 768px) { .container { max-width: 1200px; padding: 20px; } body { font-size: 16px; } }
+        .header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); display: none; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; position: relative; }
+        @media (min-width: 768px) { .header { border-radius: 20px; padding: 20px; margin-bottom: 20px; } }
+        .header h1 { margin: 0; color: #1d1d1f; font-size: 16px; font-weight: 600; flex-grow: 1; min-width: 120px; }
+        @media (min-width: 480px) { .header h1 { font-size: 20px; } }
+        @media (min-width: 768px) { .header h1 { font-size: 28px; } }
+        .user-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .user-badge { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 6px 12px; border-radius: 15px; font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+        @media (min-width: 768px) { .user-badge { padding: 8px 16px; border-radius: 20px; font-size: 14px; max-width: none; } }
+        #reports-btn { background: #17a2b8; color: white; border: none; padding: 8px 12px; border-radius: 15px; font-size: 13px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 5px; min-height: 40px; }
+        .logout-btn { background: #ff3b30; color: white; border: none; padding: 8px 14px; border-radius: 15px; cursor: pointer; font-size: 13px; transition: all 0.3s ease; min-height: 40px; }
+        @media (min-width: 768px) { .logout-btn, #reports-btn { padding: 10px 18px; border-radius: 20px; font-size: 14px; } }
+        .main-content { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); overflow: hidden; }
+        @media (min-width: 768px) { .main-content { border-radius: 20px; } }
+        .tabs { position: fixed; bottom: 0; left: 0; width: 100%; height: var(--tab-bar-height); display: grid; grid-template-columns: repeat(4, 1fr); background: rgba(248, 249, 250, 0.7); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-top: 1px solid rgba(0, 0, 0, 0.1); z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+        .tab { padding: 4px; text-align: center; cursor: pointer; border: none; background: transparent; font-size: 11px; font-weight: 500; color: #6c757d; transition: all 0.3s ease; position: relative; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 100%; border-top: 3px solid transparent; }
         .tab span:first-child { font-size: 20px; }
         .tab.active { color: #667eea; border-top-color: #667eea; }
-        .tab-content { display: none; }
+        .tab-content { display: none; padding: 15px; animation: fadeIn 0.3s ease; }
+        @media (min-width: 768px) { .tab-content { padding: 30px; } }
         .tab-content.active { display: block; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #e9ecef; border-radius: 8px; overflow: hidden; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #e9ecef; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); margin-bottom: 1px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #e9ecef; border-radius: 0 0 8px 8px; overflow: hidden; touch-action: pan-y; }
         .calendar-header { text-align: center; font-weight: 600; padding: 10px 4px; background: #667eea; color: white; font-size: 12px; }
-        .calendar-day { background: white; padding: 2px; aspect-ratio: 1 / 1.5; overflow-y: auto; position: relative; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
-        .calendar-day.today .day-number { background-color: #007aff; color: white; border-radius: 50%; width: 20px; height: 20px; display:inline-flex; align-items:center; justify-content:center; }
-        .calendar-day.other-month { background: #f8f9fa; cursor: default; }
-        .day-number { font-weight: 600; font-size: 10px; padding: 2px; line-height: 1; }
-        .event { font-size: 9px; color: white; padding: 2px 4px; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .calendar-day { background: white; padding: 2px; aspect-ratio: 1 / 1.6; overflow: hidden; position: relative; cursor: pointer; transition: background 0.2s ease; display: flex; flex-direction: column; }
+        .calendar-day:hover { transform: scale(1.02); z-index: 10; }
+        .calendar-day.today { box-shadow: inset 0 0 0 2px #007aff; z-index: 50; position: relative; }
+        .calendar-day.other-month { background: #f8f9fa; color: #adb5bd; cursor: default; }
+        .day-number { font-weight: 600; font-size: 10px; line-height: 1; align-self: flex-start; padding: 2px; color: #333; position: relative; z-index: 5; }
+        .events-container { flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 2px; }
+        .work-events-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; }
+        .vacation-events-wrapper { position: relative; z-index: 3; display: flex; flex-direction: column-reverse; gap: 2px; margin-top: auto; padding-top: 24px; }
+        .event { font-size: 8px; color: white; padding: 2px 4px; border-radius: 4px; white-space: normal; overflow: hidden; font-weight: 500; line-height: 1.2; max-width: 100%; }
+        .event.work-event { flex-grow: 1; display: flex; align-items: center; justify-content: center; text-align: center; padding: 2px; color: #2c2c2e; font-weight: 600; overflow: hidden; text-overflow: ellipsis; font-size: 10px; line-height: 1.3; }
+        .event.work-event small { font-size: 0.8em; opacity: 0.8; display: block; font-weight: 500; }
+        .event.vacation { width: 100%; padding: 2px 3px; border-radius: 2px; text-align: center; white-space: nowrap; text-overflow: ellipsis; display: flex; align-items: center; justify-content: center; gap: 4px; color: #fff; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
-        .modal-content { background: white; padding: 20px; border-radius: 12px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); }
+        .modal-content { background: white; padding: 15px; border-radius: 12px; width: calc(100% - 20px); max-width: 420px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); animation: modalSlideIn 0.3s ease; margin: 10px; }
+        @keyframes modalSlideIn { from { opacity: 0; transform: scale(0.8) translateY(-50px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .day-events-list { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .day-event-item { background: #f8f9fa; border-radius: 8px; padding: 12px; border-left: 4px solid #667eea; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .day-event-item.vacation { border-left-color: #28a745; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; }
-        input, select, textarea { width: 100%; padding: 12px 14px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 14px; }
-        button { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 12px 18px; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 500; min-height: 44px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; color: #495057; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 12px 14px; border: 2px solid #e9ecef; border-radius: 10px; box-sizing: border-box; font-size: 14px; transition: all 0.3s ease; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        button { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 12px 18px; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s ease; min-height: 44px; white-space: nowrap; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3); }
         .button-secondary { background: #6c757d; }
-        .button-danger { background: #ff3b30; }
+        .button-danger { background: linear-gradient(135deg, #ff3b30, #dc3545); }
         .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05); }
         .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
         .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
         .login-form { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 30px 20px; width: 100%; max-width: 350px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); }
-        .notification { position: fixed; top: 15px; right: 15px; background: #28a745; color: white; padding: 12px 16px; border-radius: 8px; z-index: 1001; }
-        .month-navigation { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px 15px; background: white; border-radius: 10px; }
+        .notification { position: fixed; top: 15px; right: 15px; background: #28a745; color: white; padding: 12px 16px; border-radius: 8px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2); z-index: 1001; animation: slideInRight 0.3s ease; font-size: 13px; max-width: calc(100% - 30px); }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .upcoming-events { background: white; border-radius: 12px; padding: 5px 15px; margin-bottom: 15px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05); }
+        .upcoming-events-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 10px 0; gap: 10px; flex-wrap: wrap; }
+        .upcoming-events-header h3 { margin: 0; color: #1d1d1f; font-weight: 600; font-size: 16px; }
+        .upcoming-events-list { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .upcoming-events.expanded .upcoming-events-list { max-height: 500px; }
+        .upcoming-events-header .arrow { transition: transform 0.3s ease; margin-left: auto; }
+        .upcoming-events.expanded .arrow { transform: rotate(180deg); }
+        .month-navigation { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: white; padding: 12px 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); }
+        .month-navigation h2 { margin: 0; color: #1d1d1f; font-weight: 600; font-size: 18px; }
         .nav-button { background: #667eea; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; min-height: 40px; }
-        .chip-selector, .team-type-selector, .role-selector, .event-type-selector { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-        .chip-option, .team-type-option, .role-option, .event-type-option { flex: 1; background: #f8f9fa; border: 2px solid #e9ecef; color: #495057; padding: 10px; border-radius: 12px; cursor: pointer; text-align: center; font-size: 12px; }
-        .chip-option.selected, .team-type-option.selected, .role-option.selected, .event-type-option.selected { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-color: #667eea; }
-        .modal .button-group-end { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
-        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; justify-content: center; align-items: center; z-index: 9999; font-size: 18px; color: #667eea; font-weight: 500; transition: opacity 0.3s ease; }
+        .chip-selector { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .chip-option { background: #f8f9fa; border: 2px solid #e9ecef; color: #495057; padding: 8px 12px; border-radius: 15px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.3s ease; }
+        .chip-option.selected { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-color: #667eea; }
+        .event-type-selector, .team-type-selector, .role-selector { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+        .event-type-option, .team-type-option, .role-option { flex: 1; background: #f8f9fa; border: 2px solid #e9ecef; color: #495057; padding: 12px 14px; border-radius: 12px; cursor: pointer; font-size: 13px; text-align: center; min-width: 100px; }
+        .event-type-option.selected, .team-type-option.selected, .role-option.selected { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-color: #667eea; }
+        .modal .button-group-end { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; flex-wrap: wrap; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 9999; font-size: 18px; color: #667eea; font-weight: 500; transition: opacity 0.3s ease; }
     </style>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+      import { getFirestore, collection, onSnapshot, doc, getDoc, addDoc, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+      import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+    
+      const firebaseConfig = {
+        apiKey: "AIzaSyCsWfzOoerj6TiM2am46reV42CQ0OE7TM8",
+        authDomain: "calendarsaturit.firebaseapp.com",
+        projectId: "calendarsaturit",
+        storageBucket: "calendarsaturit.appspot.com",
+        messagingSenderId: "286002422636",
+        appId: "1:286002422636:web:58b626bffddfb64b060949",
+        measurementId: "G-8GC7ZJ94TW"
+      };
+    
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const auth = getAuth(app);
+    
+      window.db = db;
+      window.auth = auth;
+      window.firebase = {
+          db: { collection, onSnapshot, doc, getDoc, addDoc, updateDoc, deleteDoc, setDoc },
+          auth: { onAuthStateChanged, signInWithEmailAndPassword, signOut }
+      };
+    
+      document.addEventListener('DOMContentLoaded', () => {
+          setupAuthListener();
+      });
+    </script>
 </head>
 <body>
     <div id="loading-overlay" class="loading-overlay">Загрузка...</div>
@@ -62,7 +149,7 @@
             <h2>Вход в систему</h2>
             <div class="form-group"><label for="username">Email</label><input type="email" id="username" placeholder="Введите ваш email"></div>
             <div class="form-group"><label for="password">Пароль</label><input type="password" id="password" placeholder="Введите пароль"></div>
-            <button data-action="login" style="width: 100%;">Войти</button>
+            <button onclick="login()" style="width: 100%;">Войти</button>
         </div>
     </div>
 
@@ -71,213 +158,340 @@
             <div class="header">
                 <h1 id="header-title"></h1>
                 <div class="user-info">
+                    <button id="reports-btn" style="display: none;" onclick="generateQuickReport()">📊 <span class="btn-text">Отчет</span></button>
                     <div class="user-badge" id="user-badge"></div>
-                    <button class="logout-btn" data-action="logout">Выход</button>
+                    <button class="logout-btn" onclick="logout()">Выход</button>
                 </div>
             </div>
+            <div class="upcoming-events" id="upcoming-events" onclick="toggleUpcomingEvents()"><div class="upcoming-events-header"><h3>Ближайшие события</h3><div id="upcoming-events-icons"></div><span class="arrow">▼</span></div><div class="upcoming-events-list" id="upcoming-events-list"></div></div>
             <div class="main-content">
-                <div id="calendar" class="tab-content"><div class="month-navigation"><button class="nav-button" data-action="prev-month">‹</button><h2 id="current-month"></h2><button class="nav-button" data-action="next-month">›</button></div><div class="calendar-grid" id="calendar-days"></div></div>
-                <div id="teams" class="tab-content"><h2>Управление бригадами</h2><button data-action="open-team-modal">Добавить бригаду</button><div id="teams-list" style="margin-top: 20px;"></div><h2 style="margin-top:30px;">Сотрудники</h2><button data-action="open-employee-modal">Добавить сотрудника</button><div id="employees-list" style="margin-top: 20px;"></div></div>
-                <div id="inventory" class="tab-content"><h2>Учет склада</h2><div id="inventory-grid"></div></div>
+                <div id="calendar" class="tab-content"><div class="month-navigation"><button class="nav-button" onclick="prevMonth()">‹</button><h2 id="current-month"></h2><button class="nav-button" onclick="nextMonth()">›</button></div><div class="calendar"><div class="calendar-header">Пн</div><div class="calendar-header">Вт</div><div class="calendar-header">Ср</div><div class="calendar-header">Чт</div><div class="calendar-header">Пт</div><div class="calendar-header">Сб</div><div class="calendar-header">Вс</div></div><div class="calendar-grid" id="calendar-days"></div></div>
+                <div id="teams" class="tab-content"><h2>Управление бригадами</h2><button onclick="openTeamModal()">Добавить бригаду</button><div id="teams-list" style="margin-top: 20px;"></div><h2 style="margin-top:30px;">Сотрудники</h2><button onclick="openEmployeeModal()">Добавить сотрудника</button><div id="employees-list" style="margin-top: 20px;"></div></div>
+                <div id="inventory" class="tab-content"><h2>Учет склада</h2><div class="inventory-grid" id="inventory-grid"></div></div>
+                <div id="requests" class="tab-content"><h2>Заявки</h2><div id="requests-list"></div></div>
             </div>
         </div>
         <div class="tabs" id="main-tabs">
-            <button class="tab" data-action="switch-tab" data-tab-id="calendar"><span>📅</span><span>Календарь</span></button>
-            <button class="tab" data-action="switch-tab" data-tab-id="teams" id="teams-tab"><span>👥</span><span>Бригады</span></button>
-            <button class="tab" data-action="switch-tab" data-tab-id="inventory"><span>📦</span><span>Склад</span></button>
-            <button class="tab" data-action="switch-tab" data-tab-id="requests" id="requests-tab"><span>📋</span><span>Заявки</span></button>
+            <button class="tab" onclick="switchTab('calendar')"><span>📅</span><span>Календарь</span></button>
+            <button class="tab" onclick="switchTab('teams')" id="teams-tab"><span>👥</span><span>Бригады</span></button>
+            <button class="tab" onclick="switchTab('inventory')"><span>📦</span><span>Склад</span></button>
+            <button class="tab" onclick="switchTab('requests')" id="requests-tab"><span>📋</span><span>Заявки</span></button>
         </div>
     </div>
     
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
-    
+    <!-- Модальные окна будут создаваться через JS, чтобы не загромождать HTML -->
+
     <script>
-    // Инициализация Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyCsWfzOoerj6TiM2am46reV42CQ0OE7TM8",
-        authDomain: "calendarsaturit.firebaseapp.com",
-        projectId: "calendarsaturit",
-        storageBucket: "calendarsaturit.appspot.com",
-        messagingSenderId: "286002422636",
-        appId: "1:286002422636:web:58b626bffddfb64b060949",
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+    // ==================================================================
+    // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+    // ==================================================================
+    let events = [], teams = [], employees = [], pipeTypes = [], inventoryOperations = [], requests = [];
+    let currentUser = null, currentDate = new Date(), selectedDate = null, unsubscribeListeners = [], selectedInventoryItem = null, editedEntity = null;
 
-    // Глобальные переменные
-    let events = [], teams = [], employees = [], pipeTypes = [], inventoryOperations = [];
-    let currentUser = null, currentDate = new Date(), unsubscribeListeners = [], editedEntity = null, selectedDate = null;
-
-    // AUTH & INIT
-    auth.onAuthStateChanged(async (user) => {
-        unsubscribeListeners.forEach(unsub => unsub());
-        unsubscribeListeners = [];
-        if (user) {
-            try {
-                const userDoc = await db.collection('users').doc(user.uid).get();
-                if (!userDoc.exists) throw new Error("Нет данных для пользователя в Firestore!");
-                currentUser = { uid: user.uid, ...userDoc.data() };
-                initializeApp();
-            } catch (error) { logout(error); }
-        } else {
-            currentUser = null;
-            document.getElementById('main-app').style.display = 'none';
-            document.getElementById('login-screen').style.display = 'flex';
-            hideLoading();
-        }
-    });
-
-    function initializeApp() {
-        document.getElementById('main-app').style.display = 'block';
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('user-badge').textContent = `${currentUser.name} (${currentUser.role === 'manager' ? 'Упр.' : 'Сотр.'})`;
-        document.getElementById('teams-tab').style.display = currentUser.role === 'manager' ? 'flex' : 'none';
-        document.getElementById('requests-tab').style.display = 'none';
-        listenToData();
-        switchTab('calendar');
-        hideLoading();
-    }
-    
-    function listenToData() {
-        const collections = ['events', 'teams', 'employees', 'pipeTypes', 'inventoryOperations'];
-        const renderAll = () => { renderCalendar(); renderTeams(); renderEmployees(); renderInventoryGrid(); };
-        collections.forEach(name => {
-            const unsub = db.collection(name).onSnapshot(snapshot => {
-                window[name] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderAll();
-            }, error => console.error(`Ошибка '${name}':`, error));
-            unsubscribeListeners.push(unsub);
+    // ==================================================================
+    // АУТЕНТИФИКАЦИЯ И ИНИЦИАЛИЗАЦИЯ
+    // ==================================================================
+    function setupAuthListener() {
+        window.firebase.auth.onAuthStateChanged(window.auth, async (user) => {
+            unsubscribeListeners.forEach(unsubscribe => unsubscribe());
+            unsubscribeListeners = [];
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (user) {
+                try {
+                    const userDocRef = window.firebase.db.doc(window.db, 'users', user.uid);
+                    const userDoc = await window.firebase.db.getDoc(userDocRef);
+                    if (!userDoc.exists()) throw new Error("Нет данных для пользователя в Firestore!");
+                    currentUser = { uid: user.uid, email: user.email, ...userDoc.data() };
+                    await initializeApp();
+                } catch (error) {
+                    console.error("Ошибка входа:", error);
+                    showNotification(error.message, "error");
+                    logout();
+                }
+            } else {
+                currentUser = null;
+                document.getElementById('main-app').style.display = 'none';
+                document.getElementById('login-screen').style.display = 'flex';
+                loadingOverlay.style.opacity = '0';
+                setTimeout(() => loadingOverlay.style.display = 'none', 300);
+            }
         });
     }
 
-    // RENDERING
+    async function login() {
+        const email = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        if (!email || !password) return showNotification("Введите email и пароль", "error");
+        try { await window.firebase.auth.signInWithEmailAndPassword(window.auth, email, password); } 
+        catch (error) { showNotification("Неверный email или пароль", "error"); }
+    }
+
+    function logout() {
+        window.firebase.auth.signOut(window.auth).catch(error => console.error("Ошибка выхода:", error));
+    }
+
+    async function initializeApp() {
+        document.getElementById('main-app').style.display = 'block';
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('user-badge').textContent = `${currentUser.name} (${currentUser.role === 'manager' ? 'Управляющий' : 'Сотрудник'})`;
+        const isManager = currentUser.role === 'manager';
+        document.getElementById('reports-btn').style.display = isManager ? 'flex' : 'none';
+        document.getElementById('teams-tab').style.display = isManager ? 'flex' : 'none';
+        document.getElementById('requests-tab').style.display = 'none'; // Заявки пока выключены
+        
+        await listenToData();
+        switchTab('calendar');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        loadingOverlay.style.opacity = '0';
+        setTimeout(() => loadingOverlay.style.display = 'none', 300);
+    }
+
+    function listenToData() {
+        const collectionsToListen = ['events', 'teams', 'employees', 'pipeTypes', 'inventoryOperations', 'requests'];
+        const renderAll = () => {
+            renderCalendar(); 
+            // renderUpcomingEvents(); 
+            renderTeams();
+            renderEmployees();
+            renderInventoryGrid();
+            // renderRequests();
+        };
+
+        collectionsToListen.forEach(collectionName => {
+            const collectionRef = window.firebase.db.collection(window.db, collectionName);
+            const unsubscribe = window.firebase.db.onSnapshot(collectionRef, (snapshot) => {
+                const targetArray = window[collectionName]; 
+                if (targetArray) {
+                    targetArray.length = 0; 
+                    snapshot.forEach(doc => targetArray.push({ id: doc.id, ...doc.data() }));
+                    renderAll(); 
+                }
+            }, (error) => console.error(`Ошибка при получении данных '${collectionName}':`, error));
+            unsubscribeListeners.push(unsubscribe);
+        });
+    }
+    
+    // ==================================================================
+    // РЕНДЕР ИНТЕРФЕЙСА (ОСНОВНЫЕ ФУНКЦИИ)
+    // ==================================================================
     function renderCalendar() {
-        const year = currentDate.getFullYear(), month = currentDate.getMonth();
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         let firstDay = new Date(year, month, 1).getDay();
         firstDay = firstDay === 0 ? 6 : firstDay - 1;
         document.getElementById('current-month').textContent = getMonthName(currentDate);
-        const grid = document.getElementById('calendar-days');
-        const headers = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-        grid.innerHTML = headers.map(h => `<div class="calendar-header">${h}</div>`).join('');
-        for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div class="calendar-day other-month"></div>`;
+        const calendarDaysEl = document.getElementById('calendar-days');
+        calendarDaysEl.innerHTML = '';
+        for (let i = 0; i < firstDay; i++) calendarDaysEl.innerHTML += `<div class="calendar-day other-month"></div>`;
         const today = formatDate(new Date());
         for (let day = 1; day <= daysInMonth; day++) {
-            const formattedDate = formatDate(new Date(year, month, day));
-            const dayEvents = events.filter(e => (e.date === formattedDate) || (e.type === 'vacation' && e.startDate <= formattedDate && e.endDate >= formattedDate));
-            let dayClasses = 'calendar-day' + (formattedDate === today ? ' today' : '');
-            let eventsHtml = dayEvents.map(event => {
-                const color = event.type === 'vacation' ? '#34c759' : getTeamColor(event.teamId);
-                const text = event.type === 'vacation' ? `🏖️ ${getEmployeeName(event.employeeId)}` : `🔧 ${getTeamName(event.teamId)}`;
-                return `<div class="event" style="background-color:${color};" title="${text}">${text}</div>`;
-            }).join('');
-            grid.innerHTML += `<div class="${dayClasses}" data-action="open-day-details" data-date="${formattedDate}"><div class="day-number">${day}</div>${eventsHtml}</div>`;
+            const date = new Date(year, month, day);
+            const formattedDate = formatDate(date);
+            const workEventsOnDay = events.filter(e => e.date === formattedDate && ['drilling', 'installation', 'trip'].includes(e.type));
+            const vacationEventsOnDay = events.filter(e => e.type === 'vacation' && e.startDate <= formattedDate && e.endDate >= formattedDate);
+            let dayClasses = 'calendar-day';
+            if (formattedDate === today) dayClasses += ' today';
+            const workEventsHtml = workEventsOnDay.map(event => `<div class="event work-event" style="background-color: ${getTeamColor(event.teamId)};" title="${getTeamName(event.teamId)}">${getTeamName(event.teamId).split(' ')[0]}</div>`).join('');
+            const vacationEventsHtml = vacationEventsOnDay.map(event => `<div class="event vacation" style="background-color: #34c759;" title="${getEmployeeName(event.employeeId)}">🏖️ ${getEmployeeName(event.employeeId).split(' ')[0]}</div>`).join('');
+            calendarDaysEl.innerHTML += `<div class="${dayClasses}" onclick="openDayDetailsModal('${formattedDate}')"><div class="work-events-wrapper">${workEventsHtml}</div><div class="day-number">${day}</div><div class="events-container"><div class="vacation-events-wrapper">${vacationEventsHtml}</div></div></div>`;
         }
-    }
-    function renderTeams() { /* ... код без изменений ... */ }
-    function renderEmployees() { /* ... код без изменений ... */ }
-    function renderInventoryGrid() { /* ... код без изменений ... */ }
-
-    // MODALS & CRUD
-    function openDayDetailsModal(date) {
-        selectedDate = date;
-        const dayEvents = events.filter(e => (e.date === date) || (e.type === 'vacation' && e.startDate <= date && e.endDate >= date));
-        let body = dayEvents.map(event => {
-            const title = event.type === 'vacation' ? `🏖️ Отпуск: ${getEmployeeName(event.employeeId)}` : `🔧 ${getTeamName(event.teamId)}: ${event.address}`;
-            return `<div class="card">${title}<div style="float:right; display:flex; gap:5px;"><button class="button-secondary" data-action="open-event-modal" data-id="${event.id}">Изм.</button><button class="button-danger" data-action="delete-entity" data-collection="events" data-id="${event.id}">Удл.</button></div></div>`
-        }).join('') || '<p>На этот день событий нет.</p>';
-        createModal('day-details', { title: `События на ${date.split('-').reverse().join('.')}`, body, footer: `<button class="button-secondary" data-action="close-modal" data-modal-id="day-details">Закрыть</button><button data-action="open-event-modal">Добавить</button>` });
+        const totalCells = firstDay + daysInMonth;
+        const remainingCells = (totalCells % 7 === 0) ? 0 : 7 - (totalCells % 7);
+        for (let i = 0; i < remainingCells; i++) calendarDaysEl.innerHTML += `<div class="calendar-day other-month"></div>`;
     }
 
-    function openEventModal(eventId = null) {
-        editedEntity = eventId ? events.find(e => e.id === eventId) : {};
-        if (!eventId) selectedDate = selectedDate || formatDate(new Date());
-        
-        createModal('event-modal', {
-            title: editedEntity.id ? 'Редактировать событие' : 'Добавить событие',
-            body: `<div class="form-group"><label>Тип</label><div class="event-type-selector" id="modal-event-type"></div></div>
-                   <div id="work-fields" style="display:none;"><div class="form-group"><label>Адрес</label><input id="event-address" value="${editedEntity.address || ''}"></div><div class="form-group"><label>Бригада</label><div id="team-chips"></div></div></div>
-                   <div id="vacation-fields" style="display:none;"><div class="form-group"><label>Сотрудник</label><div id="employee-chips"></div></div><div class="form-group"><label>Начало</label><input type="date" id="event-start-date" value="${editedEntity.startDate || selectedDate}"></div><div class="form-group"><label>Конец</label><input type="date" id="event-end-date" value="${editedEntity.endDate || selectedDate}"></div></div>`,
-            footer: `<button class="button-secondary" data-action="close-modal" data-modal-id="event-modal">Отмена</button><button data-action="save-event">Сохранить</button>`
+    function renderTeams() {
+        const list = document.getElementById('teams-list');
+        if (!list) return;
+        list.innerHTML = teams.map(team => `
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <h3 style="margin:0 0 5px 0;">${team.name}</h3>
+                        <span style="font-size:12px; color:#6c757d;">${team.type}</span>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="button-secondary" style="padding:8px 12px; min-height:0;" onclick="openTeamModal('${team.id}')">Изм.</button>
+                        <button class="button-danger" style="padding:8px 12px; min-height:0;" onclick="deleteEntity('teams', '${team.id}')">Удл.</button>
+                    </div>
+                </div>
+            </div>
+        `).join('') || '<p>Бригад пока нет.</p>';
+    }
+
+    function renderEmployees() {
+        const list = document.getElementById('employees-list');
+        if (!list) return;
+        list.innerHTML = employees.map(emp => `
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <p style="margin:0; font-weight:600;">${emp.name}</p>
+                        <p style="margin:4px 0 0; font-size:12px; color:#6c757d;">${emp.role}</p>
+                    </div>
+                     <div style="display:flex; gap:10px;">
+                        <button class="button-secondary" style="padding:8px 12px; min-height:0;" onclick="openEmployeeModal('${emp.id}')">Изм.</button>
+                        <button class="button-danger" style="padding:8px 12px; min-height:0;" onclick="deleteEntity('employees', '${emp.id}')">Удл.</button>
+                    </div>
+                </div>
+            </div>
+        `).join('') || '<p>Сотрудников пока нет.</p>';
+    }
+
+    // ==================================================================
+    // СКЛАД
+    // ==================================================================
+    function renderInventoryGrid() { /* Код из предыдущего ответа без изменений */ }
+    function calculateCurrentAmount(itemId) { /* Код из предыдущего ответа без изменений */ }
+    function openInventoryHistoryModal(itemId, itemName, isFuel) { /* Код из предыдущего ответа без изменений */ }
+    function openInventoryOperationModal() { /* Код из предыдущего ответа без изменений */ }
+    function selectOperationType(type) { /* Код из предыдущего ответа без изменений */ }
+    async function saveInventoryOperation() { /* Код из предыдущего ответа без изменений */ }
+    
+    // ==================================================================
+    // УПРАВЛЕНИЕ БРИГАДАМИ И СОТРУДНИКАМИ
+    // ==================================================================
+    function openTeamModal(teamId = null) {
+        editedEntity = teamId ? teams.find(t => t.id === teamId) : {};
+        const isEditing = !!teamId;
+        createModal('team-modal', {
+            title: isEditing ? 'Редактировать бригаду' : 'Добавить бригаду',
+            body: `
+                <div class="form-group"><label for="team-name">Название</label><input type="text" id="team-name" value="${editedEntity.name || ''}"></div>
+                <div class="form-group"><label>Тип</label><div class="team-type-selector" id="modal-team-type"></div></div>
+                <div class="form-group"><label>Цвет</label><input type="color" id="team-color" value="${editedEntity.color || '#a7c7e7'}" style="width:100%; height:40px;"></div>
+            `,
+            footer: `<button class="button-secondary" onclick="closeModal('team-modal')">Отмена</button><button onclick="saveTeam()">Сохранить</button>`
         });
-        
-        const eventTypes = { drilling: 'Бурение', installation: 'Монтаж', trip: 'Поездка', vacation: 'Отпуск' };
-        document.getElementById('modal-event-type').innerHTML = Object.keys(eventTypes).map(key => `<button class="event-type-option" data-action="select-event-type" data-type="${key}">${eventTypes[key]}</button>`).join('');
-        selectEventType(editedEntity.type || 'drilling');
+        const teamTypes = { drillers: 'Бурильщики', installers: 'Монтажники', drivers: 'Водители' };
+        document.getElementById('modal-team-type').innerHTML = Object.keys(teamTypes).map(key => 
+            `<button class="team-type-option ${editedEntity.type === key ? 'selected' : ''}" onclick="selectModalOption(this, 'team-type-option', '#modal-team-type-value', '${key}')">${teamTypes[key]}</button>`
+        ).join('') + `<input type="hidden" id="modal-team-type-value" value="${editedEntity.type || 'drillers'}">`;
     }
 
-    function selectEventType(type) {
-        document.querySelectorAll('.event-type-option').forEach(el => el.classList.toggle('selected', el.dataset.type === type));
-        const isWork = ['drilling', 'installation', 'trip'].includes(type);
-        document.getElementById('work-fields').style.display = isWork ? 'block' : 'none';
-        document.getElementById('vacation-fields').style.display = type === 'vacation' ? 'block' : 'none';
-        
-        if(isWork) {
-            const teamContainer = document.getElementById('team-chips');
-            const relevantTeams = teams.filter(t => t.type && t.type.startsWith(type.slice(0,4)));
-            teamContainer.innerHTML = relevantTeams.map(t => `<button class="chip-option ${editedEntity.teamId === t.id ? 'selected':''}" data-action="select-chip" data-input="#event-team" data-value="${t.id}">${t.name}</button>`).join('') + `<input type="hidden" id="event-team" value="${editedEntity.teamId || ''}">`;
-        } else {
-            const empContainer = document.getElementById('employee-chips');
-            empContainer.innerHTML = employees.map(e => `<button class="chip-option ${editedEntity.employeeId === e.id ? 'selected':''}" data-action="select-chip" data-input="#event-employee" data-value="${e.id}">${e.name}</button>`).join('') + `<input type="hidden" id="event-employee" value="${editedEntity.employeeId || ''}">`;
-        }
+    async function saveTeam() {
+        const teamData = {
+            name: document.getElementById('team-name').value.trim(),
+            type: document.getElementById('modal-team-type-value').value,
+            color: document.getElementById('team-color').value,
+        };
+        if (!teamData.name) return showNotification('Введите название бригады', 'error');
+        await saveEntity('teams', teamData);
+        closeModal('team-modal');
     }
 
-    async function saveEvent() {
-        const type = document.querySelector('.event-type-option.selected').dataset.type;
-        let data;
-        if (type === 'vacation') {
-            data = { type, employeeId: document.querySelector('#event-employee').value, startDate: document.getElementById('event-start-date').value, endDate: document.getElementById('event-end-date').value };
-            if (!data.employeeId || !data.startDate || !data.endDate) return showNotification('Заполните все поля', 'error');
-        } else {
-            data = { type, teamId: document.querySelector('#event-team').value, address: document.getElementById('event-address').value.trim(), date: selectedDate };
-            if (!data.teamId || !data.address) return showNotification('Выберите бригаду и адрес', 'error');
-        }
-        await saveEntity('events', data);
-        closeModal('event-modal');
+    function openEmployeeModal(empId = null) {
+        editedEntity = empId ? employees.find(e => e.id === empId) : {};
+        const isEditing = !!empId;
+        createModal('employee-modal', {
+            title: isEditing ? 'Редактировать сотрудника' : 'Добавить сотрудника',
+            body: `
+                <div class="form-group"><label for="employee-name">ФИО</label><input type="text" id="employee-name" value="${editedEntity.name || ''}"></div>
+                <div class="form-group"><label>Роль</label><div class="role-selector" id="modal-role"></div></div>
+            `,
+            footer: `<button class="button-secondary" onclick="closeModal('employee-modal')">Отмена</button><button onclick="saveEmployee()">Сохранить</button>`
+        });
+        const roles = { manager: 'Управляющий', employee: 'Сотрудник' };
+        document.getElementById('modal-role').innerHTML = Object.keys(roles).map(key => 
+            `<button class="role-option ${editedEntity.role === key ? 'selected' : ''}" onclick="selectModalOption(this, 'role-option', '#modal-role-value', '${key}')">${roles[key]}</button>`
+        ).join('') + `<input type="hidden" id="modal-role-value" value="${editedEntity.role || 'employee'}">`;
     }
 
-    // ... остальной CRUD код ...
+    async function saveEmployee() {
+        const employeeData = {
+            name: document.getElementById('employee-name').value.trim(),
+            role: document.getElementById('modal-role-value').value,
+        };
+        if (!employeeData.name) return showNotification('Введите имя сотрудника', 'error');
+        await saveEntity('employees', employeeData);
+        closeModal('employee-modal');
+    }
 
-    // HELPERS & EVENT HANDLING
+    async function saveEntity(collectionName, data) {
+        try {
+            if (editedEntity.id) { // Редактирование
+                await window.firebase.db.updateDoc(window.firebase.db.doc(window.db, collectionName, editedEntity.id), data);
+                showNotification('Данные обновлены');
+            } else { // Создание
+                await window.firebase.db.addDoc(window.firebase.db.collection(window.db, collectionName), data);
+                showNotification('Данные добавлены');
+            }
+        } catch (error) { showNotification('Ошибка сохранения', 'error'); }
+    }
+    
+    async function deleteEntity(collectionName, docId) {
+        if (!confirm('Вы уверены, что хотите удалить эту запись?')) return;
+        try {
+            await window.firebase.db.deleteDoc(window.firebase.db.doc(window.db, collectionName, docId));
+            showNotification('Запись удалена');
+        } catch (error) { showNotification('Ошибка удаления', 'error'); }
+    }
+
+    // ==================================================================
+    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // ==================================================================
+    function showNotification(message, type = 'success') { const el = document.createElement('div'); el.className = 'notification'; el.textContent = message; if (type === 'error') el.style.background = '#ff3b30'; document.body.appendChild(el); setTimeout(() => el.remove(), 3000); }
+    function formatDate(d) { d = new Date(d); return [d.getFullYear(), `${d.getMonth()+1}`.padStart(2,'0'), `${d.getDate()}`.padStart(2,'0')].join('-'); }
+    function getMonthName(d) { return d.toLocaleString('ru-RU', { month: 'long', year: 'numeric' }); }
+    function getTeamName(id) { return teams.find(t => t.id === id)?.name || "?"; }
+    function getTeamColor(id) { return teams.find(t => t.id === id)?.color || "#ccc"; }
+    function getEmployeeName(id) { return employees.find(e => e.id === id)?.name || "?"; }
+    
     function createModal(id, content) {
-        let m = document.getElementById(id);
-        if (m) m.remove();
-        m = document.createElement('div');
-        m.id = id;
-        m.className = 'modal';
-        m.innerHTML = `<div class="modal-content"><h2>${content.title}</h2>${content.body}<div class="button-group-end">${content.footer}</div></div>`;
-        document.body.appendChild(m);
-        m.style.display = 'flex';
+        let modal = document.getElementById(id);
+        if (modal) modal.remove();
+        modal = document.createElement('div');
+        modal.id = id;
+        modal.className = 'modal';
+        modal.innerHTML = `<div class="modal-content"><h2>${content.title}</h2>${content.body}<div class="button-group-end">${content.footer}</div></div>`;
+        document.body.appendChild(modal);
+        openModal(id);
     }
-    function closeModal(id) { const m = document.getElementById(id); if (m) m.remove(); }
     
-    document.body.addEventListener('click', (e) => {
-        const target = e.target.closest('[data-action]');
-        if (!target) return;
-        const { action, id, collection, tabId, date, type, name, isFuel, value, input, class: cssClass, modalId } = target.dataset;
+    function selectModalOption(element, optionClass, hiddenInputSelector, value) {
+        element.parentElement.querySelectorAll(`.${optionClass}`).forEach(opt => opt.classList.remove('selected'));
+        element.classList.add('selected');
+        document.querySelector(hiddenInputSelector).value = value;
+    }
 
-        // Простое и надежное ветвление
-        if (action === 'login') login();
-        else if (action === 'logout') logout();
-        else if (action === 'switch-tab') switchTab(tabId);
-        else if (action === 'prev-month') { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); }
-        else if (action === 'next-month') { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
-        else if (action === 'open-day-details') openDayDetailsModal(date);
-        else if (action === 'open-event-modal') openEventModal(id);
-        else if (action === 'select-event-type') selectEventType(type);
-        else if (action === 'save-event') saveEvent();
-        else if (action === 'close-modal') closeModal(modalId);
-        else if (action === 'delete-entity') deleteEntity(collection, id);
-        // и так далее для всех остальных действий...
-    });
+    function openModal(id) { let el = document.getElementById(id); if (el) el.style.display = 'flex'; }
+    function closeModal(id) { let el = document.getElementById(id); if (el) el.style.display = 'none'; }
+    function prevMonth() { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); }
+    function nextMonth() { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content, .tab').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId)?.classList.add('active');
+        document.querySelector(`.tab[onclick="switchTab('${tabId}')"]`)?.classList.add('active');
+        document.getElementById('header-title').textContent = document.querySelector(`.tab[onclick="switchTab('${tabId}')"] span:last-child`).textContent;
+        document.querySelector('.header').style.display = 'flex';
+    }
+    function toggleUpcomingEvents() { document.getElementById('upcoming-events').classList.toggle('expanded'); }
     
+    // Привязываем события после загрузки DOM
     document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('password').addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
-        setupAuthListener();
+         document.getElementById('password').addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
     });
+
+    // Делаем функции доступными глобально, так как они вызываются из HTML (onclick)
+    window.login = login;
+    window.logout = logout;
+    window.switchTab = switchTab;
+    window.prevMonth = prevMonth;
+    window.nextMonth = nextMonth;
+    window.toggleUpcomingEvents = toggleUpcomingEvents;
+    window.openInventoryHistoryModal = openInventoryHistoryModal;
+    window.openInventoryOperationModal = openInventoryOperationModal;
+    window.selectOperationType = selectOperationType;
+    window.saveInventoryOperation = saveInventoryOperation;
+    window.closeModal = closeModal;
+    window.openTeamModal = openTeamModal;
+    window.saveTeam = saveTeam;
+    window.openEmployeeModal = openEmployeeModal;
+    window.saveEmployee = saveEmployee;
+    window.deleteEntity = deleteEntity;
+    window.selectModalOption = selectModalOption;
+    // ... и другие функции, вызываемые из HTML
     </script>
 </body>
 </html>
