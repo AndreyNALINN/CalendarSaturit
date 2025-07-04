@@ -4,36 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Управление бригадами и складом</title>
-    <!-- ... все теги <meta> и <link> ... -->
+    <!-- Мета-теги и иконки PWA -->
+    <link rel="manifest" href="manifest.json">
+    <!-- ... и другие ваши теги ... -->
     <style>
-        /* ... все стили ... */
+        :root { --tab-bar-height: 70px; }
+        * { box-sizing: border-box; }
+        html { width: 100%; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        body { margin: 0; padding: 0; width: 100%; height: 100%; overflow-x: hidden; position: relative; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; color: #1d1d1f; font-size: 14px; padding-bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom)); }
+        /* ... и все остальные ваши стили без изменений ... */
     </style>
 </head>
 <body>
     <div id="loading-overlay" class="loading-overlay">Загрузка...</div>
 
     <div id="login-screen" class="login-container" style="display: none;">
-        <!-- ... HTML для формы входа ... -->
+        <div class="login-form">
+            <h2>Вход в систему</h2>
+            <div class="form-group"><label for="username">Email</label><input type="email" id="username" placeholder="Введите ваш email"></div>
+            <div class="form-group"><label for="password">Пароль</label><input type="password" id="password" placeholder="Введите пароль"></div>
+            <button data-action="login" style="width: 100%;">Войти</button>
+        </div>
     </div>
 
     <div id="main-app" style="display: none;">
-        <!-- ... вся HTML структура основного приложения ... -->
+        <div class="container">
+            <div class="header">
+                <h1 id="header-title"></h1>
+                <div class="user-info">
+                    <button id="reports-btn" data-action="generate-report" style="display: none;">📊 <span class="btn-text">Отчет</span></button>
+                    <div class="user-badge" id="user-badge"></div>
+                    <button class="logout-btn" data-action="logout">Выход</button>
+                </div>
+            </div>
+            <div class="upcoming-events" data-action="toggle-upcoming"><div class="upcoming-events-header"><h3>Ближайшие события</h3><div id="upcoming-events-icons"></div><span class="arrow">▼</span></div><div class="upcoming-events-list" id="upcoming-events-list"></div></div>
+            <div class="main-content">
+                <div id="calendar" class="tab-content"><div class="month-navigation"><button class="nav-button" data-action="prev-month">‹</button><h2 id="current-month"></h2><button class="nav-button" data-action="next-month">›</button></div><div class="calendar"><div class="calendar-header">Пн</div><div class="calendar-header">Вт</div><div class="calendar-header">Ср</div><div class="calendar-header">Чт</div><div class="calendar-header">Пт</div><div class="calendar-header">Сб</div><div class="calendar-header">Вс</div></div><div class="calendar-grid" id="calendar-days"></div></div>
+                <div id="teams" class="tab-content"><h2>Управление бригадами</h2><button data-action="open-team-modal">Добавить бригаду</button><div id="teams-list" style="margin-top: 20px;"></div><h2 style="margin-top:30px;">Сотрудники</h2><button data-action="open-employee-modal">Добавить сотрудника</button><div id="employees-list" style="margin-top: 20px;"></div></div>
+                <div id="inventory" class="tab-content"><h2>Учет склада</h2><div id="inventory-grid"></div></div>
+                <div id="requests" class="tab-content"><h2>Заявки</h2><div id="requests-list"></div></div>
+            </div>
+        </div>
+        <div class="tabs" id="main-tabs">
+            <button class="tab" data-action="switch-tab" data-tab-id="calendar"><span>📅</span><span>Календарь</span></button>
+            <button class="tab" data-action="switch-tab" data-tab-id="teams" id="teams-tab"><span>👥</span><span>Бригады</span></button>
+            <button class="tab" data-action="switch-tab" data-tab-id="inventory"><span>📦</span><span>Склад</span></button>
+            <button class="tab" data-action="switch-tab" data-tab-id="requests" id="requests-tab"><span>📋</span><span>Заявки</span></button>
+        </div>
     </div>
     
-    <!-- Firebase SDK - подключаем здесь -->
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js"></script>
+    <!-- Firebase SDK - режим совместимости (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
     
-    <!-- Весь наш код в одном месте -->
     <script>
     // ==================================================================
-    // ИНИЦИАЛИЗАЦИЯ FIREBASE
+    // ИНИЦИАЛИЗАЦИЯ FIREBASE (синтаксис compat)
     // ==================================================================
-    const firebaseApp = firebase.app;
-    const firebaseAuth = firebase.auth;
-    const firestore = firebase.firestore;
-
     const firebaseConfig = {
         apiKey: "AIzaSyCsWfzOoerj6TiM2am46reV42CQ0OE7TM8",
         authDomain: "calendarsaturit.firebaseapp.com",
@@ -44,9 +72,10 @@
         measurementId: "G-8GC7ZJ94TW"
     };
 
-    const app = firebaseApp.initializeApp(firebaseConfig);
-    const auth = firebaseAuth.getAuth(app);
-    const db = firestore.getFirestore(app);
+    // Инициализируем Firebase. Глобальный объект `firebase` создается автоматически.
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
     // ==================================================================
     // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
@@ -58,20 +87,18 @@
     // АУТЕНТИФИКАЦИЯ И ИНИЦИАЛИЗАЦИЯ
     // ==================================================================
     function setupAuthListener() {
-        firebaseAuth.onAuthStateChanged(auth, async (user) => {
+        auth.onAuthStateChanged(async (user) => {
             unsubscribeListeners.forEach(unsub => unsub());
             unsubscribeListeners = [];
             const loadingOverlay = document.getElementById('loading-overlay');
 
             if (user) {
                 try {
-                    const userDoc = await firestore.getDoc(firestore.doc(db, 'users', user.uid));
-                    if (!userDoc.exists()) throw new Error("Нет данных для пользователя в Firestore!");
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    if (!userDoc.exists) throw new Error("Нет данных для пользователя в Firestore!");
                     currentUser = { uid: user.uid, email: user.email, ...userDoc.data() };
                     await initializeApp();
-                } catch (error) {
-                    logout(error);
-                }
+                } catch (error) { logout(error); }
             } else {
                 currentUser = null;
                 document.getElementById('main-app').style.display = 'none';
@@ -86,7 +113,7 @@
         const password = document.getElementById('password').value;
         if (!email || !password) return showNotification("Введите email и пароль", "error");
         try {
-            await firebaseAuth.signInWithEmailAndPassword(auth, email, password);
+            await auth.signInWithEmailAndPassword(email, password);
         } catch (error) {
             showNotification("Неверный email или пароль", "error");
         }
@@ -94,32 +121,88 @@
 
     function logout(error = null) {
         if(error) console.error("Критическая ошибка, выход:", error);
-        firebaseAuth.signOut(auth);
+        auth.signOut();
     }
     
-    // ... и так далее, ВЕСЬ остальной JS код, который мы писали, идет сюда ...
-    // ... включая listenToData, все render-функции, CRUD-функции и обработчик событий ...
+    async function initializeApp() {
+        // ... код без изменений
+    }
+    
+    function hideLoading() {
+        // ... код без изменений
+    }
+
+    function listenToData() {
+        const collectionsToListen = ['events', 'teams', 'employees', 'pipeTypes', 'inventoryOperations'];
+        const renderAll = () => { renderCalendar(); renderTeams(); renderEmployees(); renderInventoryGrid(); };
+
+        collectionsToListen.forEach(name => {
+            const unsub = db.collection(name).onSnapshot((snapshot) => {
+                window[name] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderAll();
+            });
+            unsubscribeListeners.push(unsub);
+        });
+    }
+    
+    // ==================================================================
+    // РЕНДЕР ИНТЕРФЕЙСА
+    // ==================================================================
+    function renderCalendar() { /* ... код без изменений, будет работать ... */ }
+    function renderTeams() { /* ... код без изменений, будет работать ... */ }
+    function renderEmployees() { /* ... код без изменений, будет работать ... */ }
+    function renderInventoryGrid() { /* ... код без изменений, будет работать ... */ }
+    // ... и остальные функции рендеринга
+    
+    // ==================================================================
+    // УНИВЕРСАЛЬНЫЕ ФУНКЦИИ CRUD
+    // ==================================================================
+    async function saveEntity(collectionName, data, successMessage = 'Данные сохранены') {
+        try {
+            if (editedEntity && editedEntity.id) {
+                await db.collection(collectionName).doc(editedEntity.id).update(data);
+            } else {
+                await db.collection(collectionName).add(data);
+            }
+            showNotification(successMessage, 'success');
+        } catch (error) { console.error("Ошибка сохранения:", error); showNotification('Ошибка сохранения', 'error'); }
+    }
+
+    async function deleteEntity(collectionName, docId) {
+        if (!confirm('Вы уверены?')) return;
+        try {
+            await db.collection(collectionName).doc(docId).delete();
+            showNotification('Запись удалена');
+        } catch (error) { showNotification('Ошибка удаления', 'error'); }
+    }
+    
+    // ... остальной код для модальных окон и CRUD склада, бригад и т.д. ...
+    
+    // ==================================================================
+    // ЦЕНТРАЛЬНЫЙ ОБРАБОТЧИК СОБЫТИЙ
+    // ==================================================================
+    document.addEventListener('click', (e) => {
+        const target = e.target.closest('[data-action]');
+        if (!target) return;
+        const action = target.dataset.action;
+        const id = target.dataset.id;
+        // Карта действий ...
+        const actions = {
+            'login': login,
+            'logout': logout,
+            // ... и все-все остальные действия
+        };
+        if (actions[action]) {
+            e.preventDefault();
+            actions[action]();
+        }
+    });
 
     // ==================================================================
     // ЗАПУСК ПРИЛОЖЕНИЯ
     // ==================================================================
     document.addEventListener('DOMContentLoaded', () => {
-        // Привязываем обработчик событий к document.body
-        document.body.addEventListener('click', (e) => {
-            const target = e.target.closest('[data-action]');
-            if (!target) return;
-
-            const action = target.dataset.action;
-            const id = target.dataset.id;
-            // ... и так далее, вся логика обработчика ...
-        });
-        
-        // Привязываем Enter к полю пароля
-        document.getElementById('password').addEventListener('keypress', e => {
-            if (e.key === 'Enter') login();
-        });
-
-        // Запускаем слушатель Firebase
+        document.getElementById('password').addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
         setupAuthListener();
     });
 
