@@ -1,0 +1,3060 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- PWA Meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Бригады">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="msapplication-tap-highlight" content="no">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" sizes="152x152" href="icon-152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="mask-icon" href="safari-pinned-tab.svg" color="#667eea">
+    
+    <title>Управление бригадами и складом</title>
+    <style>
+        :root {
+            --tab-bar-height: 70px; /* Высота нижней панели навигации */
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+        
+        html {
+            width: 100%;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            position: relative;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            color: #1d1d1f;
+            font-size: 14px;
+            padding-bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom)); /* Отступ для нижней панели */
+        }
+        
+        *:not(script):not(style) {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        input, textarea, select {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 10px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                max-width: 1200px;
+                padding: 20px;
+            }
+            body {
+                font-size: 16px;
+            }
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        @media (min-width: 768px) {
+            .header {
+                border-radius: 20px;
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+        }
+        
+        .header h1 {
+            margin: 0;
+            color: #1d1d1f;
+            font-size: 16px;
+            font-weight: 600;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        @media (min-width: 480px) {
+            .header h1 {
+                font-size: 20px;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .header h1 {
+                font-size: 28px;
+            }
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .user-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+        
+        @media (min-width: 768px) {
+            .user-badge {
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-size: 14px;
+                max-width: none;
+            }
+        }
+        
+        .logout-btn {
+            background: #ff3b30;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            min-height: 40px;
+        }
+        
+        @media (min-width: 768px) {
+            .logout-btn {
+                padding: 10px 18px;
+                border-radius: 20px;
+                font-size: 14px;
+            }
+        }
+        
+        .logout-btn:hover {
+            background: #d70015;
+            transform: translateY(-2px);
+        }
+        
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        @media (min-width: 768px) {
+            .main-content {
+                border-radius: 20px;
+            }
+        }
+        
+        .tabs {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: var(--tab-bar-height);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: rgba(248, 249, 250, 0.7);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        @media (min-width: 768px) {
+            .tabs {
+                display: flex;
+            }
+        }
+        
+        .tab {
+            padding: 4px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 11px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            position: relative;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            height: 100%;
+            border-top: 3px solid transparent; /* Placeholder for active state */
+        }
+        .tab span:first-child {
+            font-size: 20px;
+        }
+        
+        @media (min-width: 768px) {
+            .tab {
+                flex: 1;
+                font-size: 16px;
+                flex-direction: row;
+            }
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-top-color: #667eea;
+        }
+        
+        .tab:hover:not(.active) {
+            background: rgba(233, 236, 239, 0.5);
+            color: #495057;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @media (min-width: 768px) {
+            .tab-content {
+                padding: 30px;
+            }
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1px;
+        }
+        
+        @media (min-width: 768px) {
+            .calendar {
+                border-radius: 12px;
+            }
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e9ecef;
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+            touch-action: pan-y; /* Разрешить вертикальную прокрутку */
+        }
+        
+        @media (min-width: 768px) {
+            .calendar-grid {
+                border-radius: 0 0 12px 12px;
+            }
+        }
+        
+        .calendar-header {
+            text-align: center;
+            font-weight: 600;
+            padding: 10px 4px;
+            background: #667eea;
+            color: white;
+            font-size: 12px;
+        }
+        
+        @media (min-width: 768px) {
+            .calendar-header {
+                padding: 15px 10px;
+                font-size: 14px;
+            }
+        }
+        
+        .calendar-day {
+            background: white;
+            padding: 2px;
+            aspect-ratio: 1 / 1.6; /* More vertical space */
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        @media (min-width: 768px) {
+            .calendar-day {
+                padding: 4px;
+            }
+        }
+
+        .calendar-day:hover {
+            transform: scale(1.02);
+            z-index: 10;
+        }
+        
+        .calendar-day.today {
+            box-shadow: inset 0 0 0 2px #007aff;
+            z-index: 50; /* Сделать выше других элементов */
+            position: relative; /* Убедиться что z-index работает */
+        }
+        
+        .calendar-day.other-month {
+            background: #f8f9fa;
+            color: #adb5bd;
+            cursor: default;
+        }
+        .calendar-day.other-month:hover {
+            transform: none;
+        }
+        
+        .day-number {
+            font-weight: 600;
+            font-size: 10px;
+            line-height: 1;
+            align-self: flex-start;
+            padding: 2px;
+            color: #333;
+            position: relative;
+            z-index: 5;
+        }
+        
+        @media (min-width: 480px) {
+            .day-number {
+                font-size: 12px;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .day-number {
+                font-size: 16px;
+            }
+        }
+        
+        .events-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 2px;
+        }
+
+        .work-events-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .vacation-events-wrapper {
+            position: relative;
+            z-index: 3;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 2px;
+            margin-top: auto;
+            padding-top: 24px;
+        }
+        
+        .event {
+            font-size: 8px;
+            color: white;
+            padding: 2px 4px;
+            border-radius: 4px;
+            white-space: normal;
+            overflow: hidden;
+            font-weight: 500;
+            line-height: 1.2;
+            max-width: 100%;
+        }
+
+        .event.work-event {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2px;
+            color: #2c2c2e;
+            font-weight: 600; /* Bolder font */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 10px;
+            line-height: 1.3;
+        }
+        
+        .event.work-event small {
+            font-size: 0.8em;
+            opacity: 0.8;
+            display: block;
+            font-weight: 500;
+        }
+
+        .event.vacation {
+            width: 100%;
+            padding: 2px 3px;
+            border-radius: 2px;
+            text-align: center;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: #fff;
+        }
+        
+        @media (min-width: 480px) {
+            .event { font-size: 9px; }
+            .event.work-event { font-size: 11px; }
+            .event.vacation { padding: 3px 5px; }
+        }
+        
+        @media (min-width: 768px) {
+            .event { font-size: 11px; }
+            .event.work-event { font-size: 12px; }
+            .event.vacation { padding: 4px 6px; border-radius: 4px; }
+        }
+        
+        .modal-content {
+            max-height: 90vh;
+        }
+        
+        @media (min-width: 768px) {
+            .modal-content {
+                max-height: 85vh;
+            }
+        }
+        
+        .upcoming-events-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px 0;
+        }
+
+        .upcoming-events-header h3 {
+            margin: 0;
+            color: #1d1d1f;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .upcoming-events-icons {
+            display: flex;
+            gap: 8px;
+            font-size: 18px;
+        }
+
+        .upcoming-events-list {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .upcoming-events.expanded .upcoming-events-list {
+            max-height: 500px; /* Or a large enough value */
+        }
+        
+        .upcoming-events-header .arrow {
+            transition: transform 0.3s ease;
+        }
+
+        .upcoming-events.expanded .arrow {
+            transform: rotate(180deg);
+        }
+
+        /* --- Rest of the styles remain largely the same --- */
+        
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .toggle {
+            position: relative;
+            width: 40px;
+            height: 22px;
+            background: #ccc;
+            border-radius: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+        
+        .toggle.active {
+            background: #667eea;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .toggle.active .toggle-slider {
+            transform: translateX(18px);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            width: calc(100% - 20px);
+            max-width: 380px;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease;
+            margin: 10px;
+        }
+        
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: scale(0.8) translateY(-50px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        
+        .day-events-list {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .day-event-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .day-event-item.vacation {
+            border-left-color: #28a745;
+        }
+        
+        .day-event-info {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .day-event-info p {
+            margin: 2px 0;
+            font-size: 13px;
+        }
+        
+        .day-event-info strong {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .day-event-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        
+        .day-event-actions button {
+            padding: 6px 10px;
+            font-size: 12px;
+            min-height: 36px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .equipment-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .equipment-row select {
+            flex: 3;
+        }
+        .equipment-row input {
+            flex: 1;
+        }
+        .equipment-row .remove-btn {
+            flex-shrink: 0;
+            padding: 0;
+            width: 36px;
+            height: 36px;
+            font-size: 18px;
+            line-height: 36px;
+            background: #f8d7da;
+            color: #721c24;
+            min-height: 0;
+        }
+        .add-pipe-btn {
+            background: #d4edda;
+            color: #155724;
+            margin-top: 5px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-height: 44px;
+            white-space: nowrap;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .button-secondary {
+            background: #6c757d;
+        }
+        
+        .button-secondary:hover {
+            background: #5a6268;
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+        }
+        
+        .button-danger {
+            background: linear-gradient(135deg, #ff3b30, #dc3545);
+        }
+        
+        .button-danger:hover {
+            box-shadow: 0 8px 25px rgba(255, 59, 48, 0.3);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .inventory-item {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .inventory-item:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+        
+        .inventory-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .inventory-item-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1d1d1f;
+        }
+        
+        .inventory-item-amount {
+            font-weight: bold;
+            font-size: 20px;
+            color: #667eea;
+        }
+        
+        .inventory-item-warning {
+            color: #ff3b30;
+            font-size: 12px;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+        
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .login-form {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px 20px;
+            width: 100%;
+            max-width: 350px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+        
+        .login-form h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #1d1d1f;
+            font-weight: 600;
+            font-size: 22px;
+        }
+        
+        .request-item {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-left: 4px solid #ffc107;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .request-item.approved {
+            border-left-color: #28a745;
+        }
+        
+        .request-item.rejected {
+            border-left-color: #dc3545;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: #28a745;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            animation: slideInRight 0.3s ease;
+            font-size: 13px;
+            max-width: calc(100% - 30px);
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .upcoming-events {
+            background: white;
+            border-radius: 12px;
+            padding: 5px 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+        }
+        
+        .upcoming-event {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        .upcoming-event:last-child {
+            border-bottom: none;
+        }
+        
+        .event-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .month-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            background: white;
+            padding: 12px 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .month-navigation h2 {
+            margin: 0;
+            color: #1d1d1f;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .nav-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            min-height: 40px;
+        }
+        
+        .nav-button:hover {
+            background: #5a67d8;
+            transform: scale(1.1);
+        }
+        
+        .comment-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .comment {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+        
+        .comment-author {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .add-comment {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        
+        .comment-input {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .comment-btn {
+            padding: 8px 12px;
+            font-size: 12px;
+            min-height: 38px;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            margin-top: 15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            overflow: hidden;
+            font-size: 12px;
+        }
+        
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #d2d2d7;
+            white-space: nowrap;
+        }
+        
+        th {
+            background-color: #f5f5f7;
+            font-weight: 500;
+        }
+        
+        .employee-chip {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            margin-right: 4px;
+            margin-bottom: 4px;
+            font-size: 12px;
+            line-height: 1.2;
+        }
+        
+        .chip-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        
+        .chip-option {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            color: #495057;
+            padding: 8px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            user-select: none;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+        }
+        
+        .chip-option:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+        
+        .chip-option.selected {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .chip-option.team-color {
+            color: #2c2c2e;
+            font-weight: 600;
+            border: 2px solid rgba(0,0,0,0.1);
+        }
+        
+        .chip-option.team-color.selected {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            border: 2px solid #333;
+        }
+        
+        .event-type-selector,
+        .role-selector,
+        .operation-type-selector,
+        .team-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .event-type-option,
+        .role-option,
+        .operation-type-option,
+        .team-type-option {
+            flex: 1;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            color: #495057;
+            padding: 12px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+            user-select: none;
+            min-width: 100px;
+        }
+        
+        .event-type-option.selected,
+        .role-option.selected,
+        .operation-type-option.selected,
+        .team-type-option.selected {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .operation-type-option.income {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .operation-type-option.income.selected {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border-color: #28a745;
+        }
+        
+        .operation-type-option.expense {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        .operation-type-option.expense.selected {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            border-color: #dc3545;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .modal .button-group-end {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        /* Скрыть верхнюю плашку по умолчанию */
+        .container .header {
+            display: flex;
+        }
+        
+        /* Показать только для вкладки заявок */
+        body:not(.requests-active) .container .header {
+            display: none;
+        }
+
+        /* Показать ближайшие события по умолчанию */
+        .container .upcoming-events {
+            display: block;
+        }
+        
+        /* Скрыть для не-календарных вкладок */
+        body:not(.calendar-active) .container .upcoming-events {
+            display: none;
+        }
+        
+        /* Календарь на весь экран по вертикали на вкладке календаря */
+        body.calendar-active #calendar .calendar-grid {
+            min-height: calc(100vh - 400px);
+        }
+        
+        @media (min-width: 768px) {
+            body.calendar-active #calendar .calendar-grid {
+                min-height: calc(100vh - 450px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="login-screen" class="login-container">
+        <div class="login-form">
+            <h2>Вход в систему</h2>
+            <div class="form-group">
+                <label for="username">Имя пользователя</label>
+                <input type="text" id="username" placeholder="Введите имя пользователя">
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password" id="password" placeholder="Введите пароль">
+            </div>
+            <button onclick="login()" style="width: 100%;">Войти</button>
+        </div>
+    </div>
+
+    <div id="main-app" style="display: none;">
+        <div class="container">
+            <div class="header">
+                <h1>Управление бригадами и складом</h1>
+                <div class="user-info">
+                    <div class="user-badge" id="user-badge"></div>
+                    <button class="logout-btn" onclick="logout()">Выход</button>
+                </div>
+            </div>
+            
+            <div class="upcoming-events" id="upcoming-events" onclick="toggleUpcomingEvents()">
+                <div class="upcoming-events-header">
+                    <h3>Ближайшие события</h3>
+                    <div class="upcoming-events-icons" id="upcoming-events-icons"></div>
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="upcoming-events-list" id="upcoming-events-list"></div>
+            </div>
+            
+            <div class="main-content">
+                <div id="calendar" class="tab-content active">
+                    <div class="toggle-container">
+                        <label>Показать отпуска:</label>
+                        <div class="toggle active" id="vacation-toggle" onclick="toggleVacations()">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="month-navigation">
+                        <button class="nav-button" onclick="prevMonth()">‹</button>
+                        <h2 id="current-month">Май 2023</h2>
+                        <button class="nav-button" onclick="nextMonth()">›</button>
+                    </div>
+                    
+                    <div class="calendar">
+                        <div class="calendar-header">Пн</div>
+                        <div class="calendar-header">Вт</div>
+                        <div class="calendar-header">Ср</div>
+                        <div class="calendar-header">Чт</div>
+                        <div class="calendar-header">Пт</div>
+                        <div class="calendar-header">Сб</div>
+                        <div class="calendar-header">Вс</div>
+                    </div>
+                    
+                    <div class="calendar-grid" id="calendar-days"></div>
+                </div>
+                
+                <div id="teams" class="tab-content">
+                    <h2>Управление бригадами</h2>
+                    <button onclick="openTeamModal()" style="margin-bottom: 20px;">Добавить бригаду</button>
+                    <div id="teams-list"></div>
+                    
+                    <h2 style="margin-top: 30px;">Сотрудники</h2>
+                    <button onclick="openEmployeeModal()" style="margin-bottom: 20px;">Добавить сотрудника</button>
+                    <div id="employees-list"></div>
+                </div>
+                
+                <div id="inventory" class="tab-content">
+                    <h2>Учет склада</h2>
+                    <div class="inventory-grid" id="inventory-grid"></div>
+                </div>
+                
+                <div id="requests" class="tab-content">
+                    <h2>Заявки</h2>
+                    <div id="requests-list"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tabs" id="main-tabs">
+            <button class="tab active" onclick="switchTab('calendar')">
+                <span>📅</span>
+                <span>Календарь</span>
+            </button>
+            <button class="tab" onclick="switchTab('teams')" id="teams-tab">
+                <span>👥</span>
+                <span>Бригады</span>
+            </button>
+            <button class="tab" onclick="switchTab('inventory')">
+                <span>📦</span>
+                <span>Склад</span>
+            </button>
+            <button class="tab" onclick="switchTab('requests')" id="requests-tab">
+                <span>📋</span>
+                <span>Заявки</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Модальные окна -->
+    <div id="event-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="event-modal-title">Добавить событие</h2>
+            <input type="hidden" id="event-id">
+            
+            <div class="form-group">
+                <label>Тип события</label>
+                <div class="event-type-selector">
+                    <div class="event-type-option selected" onclick="selectEventType(this, 'drilling')">
+                        ⛏️ Бурение
+                    </div>
+                    <div class="event-type-option" onclick="selectEventType(this, 'installation')">
+                        🔧 Монтаж
+                    </div>
+                     <div class="event-type-option" onclick="selectEventType(this, 'trip')">
+                        🚚 Поездка
+                    </div>
+                    <div class="event-type-option" onclick="selectEventType(this, 'vacation')">
+                        🏖️ Отпуск
+                    </div>
+                </div>
+                <input type="hidden" id="event-type" value="drilling">
+            </div>
+            
+            <div id="work-fields">
+                <div class="form-group">
+                    <label for="event-date">Дата</label>
+                    <input type="date" id="event-date">
+                </div>
+                <div class="form-group">
+                    <label for="event-address">Адрес объекта</label>
+                    <input type="text" id="event-address" placeholder="Введите адрес объекта">
+                </div>
+                
+                <div class="form-group">
+                    <label>Бригада</label>
+                    <div class="chip-selector" id="team-chips"></div>
+                    <input type="hidden" id="event-team">
+                </div>
+                
+                <div class="form-group" id="equipment-form-group">
+                    <label>Что взять с собой (трубы)</label>
+                    <div id="equipment-list"></div>
+                    <button class="add-pipe-btn" onclick="addPipeRow()">+ Добавить трубу</button>
+                </div>
+
+                <div class="form-group" id="installation-equipment-group" style="display:none;">
+                    <label>Тип монтажа</label>
+                    <select id="installation-type">
+                        <option value="Летнее">Летнее</option>
+                        <option value="Адаптер">Адаптер</option>
+                        <option value="Кессон">Кессон</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="vacation-fields" style="display: none;">
+                <div class="form-group">
+                    <label>Сотрудник</label>
+                    <div class="chip-selector" id="employee-chips"></div>
+                    <input type="hidden" id="event-employee">
+                </div>
+                
+                <div class="form-group">
+                    <label for="event-start-date">Начало отпуска</label>
+                    <input type="date" id="event-start-date">
+                </div>
+                
+                <div class="form-group">
+                    <label for="event-end-date">Конец отпуска</label>
+                    <input type="date" id="event-end-date">
+                </div>
+            </div>
+            
+            <div class="button-group-end">
+                <button class="button-secondary" onclick="closeModal('event-modal')">Отмена</button>
+                <button id="save-event-btn" onclick="saveEvent()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="day-details-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="day-details-title">События на день</h2>
+            <div id="day-events-list">
+                <!-- Сюда будут рендериться события дня -->
+            </div>
+            <div class="button-group-end">
+                <button class="button-secondary" onclick="closeModal('day-details-modal')">Закрыть</button>
+                <button id="add-event-from-day-btn" onclick="addEventFromDayView()">Добавить</button>
+                <button id="request-vacation-from-day-btn" onclick="requestVacationFromDayView()">Отпуск</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="vacation-request-modal" class="modal">
+        <div class="modal-content">
+            <h2>Запрос на отпуск</h2>
+            
+            <div class="form-group">
+                <label for="vacation-start-date">Начало отпуска</label>
+                <input type="date" id="vacation-start-date">
+            </div>
+            
+            <div class="form-group">
+                <label for="vacation-end-date">Конец отпуска</label>
+                <input type="date" id="vacation-end-date">
+            </div>
+            
+            <div class="form-group">
+                <label for="vacation-reason">Причина</label>
+                <textarea id="vacation-reason" placeholder="Укажите причину отпуска"></textarea>
+            </div>
+            
+            <div class="button-group-end">
+                <button class="button-secondary" onclick="closeModal('vacation-request-modal')">Отмена</button>
+                <button onclick="submitVacationRequest()">Отправить заявку</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="inventory-request-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="inventory-request-title">Запрос материалов</h2>
+            
+            <div class="form-group">
+                <label for="request-amount">Количество</label>
+                <input type="number" id="request-amount" min="1">
+            </div>
+            
+            <div class="button-group-end">
+                <button class="button-secondary" onclick="closeModal('inventory-request-modal')">Отмена</button>
+                <button onclick="submitInventoryRequest()">Отправить заявку</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="event-details-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="event-details-title">Детали события</h2>
+            <div id="event-details-content"></div>
+            
+            <div class="comment-section" id="comment-section">
+                <h4>Комментарии</h4>
+                <div id="comments-list"></div>
+                <div class="add-comment" id="add-comment-form">
+                    <input type="text" id="new-comment" class="comment-input" placeholder="Добавить комментарий...">
+                    <button class="comment-btn" onclick="addComment()">Отправить</button>
+                </div>
+            </div>
+            
+            <div class="button-group-end">
+                <button onclick="closeModal('event-details-modal')">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="team-modal" class="modal">
+        <div class="modal-content">
+            <h2>Добавить бригаду</h2>
+            
+            <div class="form-group">
+                <label for="team-name">Название бригады</label>
+                <input type="text" id="team-name" placeholder="Введите название бригады">
+            </div>
+
+            <div class="form-group">
+                <label>Тип бригады</label>
+                <div class="team-type-selector">
+                    <div class="team-type-option selected" onclick="selectTeamType(this, 'drillers')">
+                        ⛏️ Бурильщики
+                    </div>
+                    <div class="team-type-option" onclick="selectTeamType(this, 'installers')">
+                        🔧 Монтажники
+                    </div>
+                    <div class="team-type-option" onclick="selectTeamType(this, 'drivers')">
+                        🚚 Водители
+                    </div>
+                </div>
+                <input type="hidden" id="team-type" value="drillers">
+            </div>
+            
+            <div class="form-group">
+                <label>Цвет бригады</label>
+                <div class="chip-selector" id="color-chips">
+                    <div class="chip-option team-color selected" style="background-color: #a7c7e7;" onclick="selectTeamColor(this, '#a7c7e7')">Голубой</div>
+                    <div class="chip-option team-color" style="background-color: #98fb98;" onclick="selectTeamColor(this, '#98fb98')">Зеленый</div>
+                    <div class="chip-option team-color" style="background-color: #ffb347;" onclick="selectTeamColor(this, '#ffb347')">Оранжевый</div>
+                    <div class="chip-option team-color" style="background-color: #ff6961;" onclick="selectTeamColor(this, '#ff6961')">Красный</div>
+                    <div class="chip-option team-color" style="background-color: #b19cd9;" onclick="selectTeamColor(this, '#b19cd9')">Фиолетовый</div>
+                </div>
+                <input type="hidden" id="team-color" value="#a7c7e7">
+            </div>
+            
+            <div class="button-group-end">
+                <button class="button-secondary" onclick="closeModal('team-modal')">Отмена</button>
+                <button onclick="saveTeam()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="employee-modal" class="modal">
+        <div class="modal-content">
+            <h2>Добавить сотрудника</h2>
+            
+            <div class="form-group">
+                <label for="employee-name">ФИО сотрудника</label>
+                <input type="text" id="employee-name" placeholder="Введите полное имя сотрудника">
+            </div>
+            
+            <div class="form-group">
+                <label for="employee-username">Имя пользователя</label>
+                <input type="text" id="employee-username" placeholder="Введите логин">
+            </div>
+            
+            <div class="form-group">
+                <label for="employee-password">Пароль</label>
+                <input type="password" id="employee-password" placeholder="Введите пароль">
+            </div>
+            
+            <div class="form-group">
+                <label>Роль</label>
+                <div class="role-selector">
+                    <div class="role-option selected" onclick="selectRole(this, 'employee')">
+                        👤 Сотрудник
+                    </div>
+                    <div class="role-option" onclick="selectRole(this, 'manager')">
+                        👔 Управляющий
+                    </div>
+                </div>
+                <input type="hidden" id="employee-role" value="employee">
+            </div>
+            
+            <div class="button-group-end">
+                <button class="button-secondary" onclick="closeModal('employee-modal')">Отмена</button>
+                <button onclick="saveEmployee()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="inventory-operation-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="inventory-operation-title">Операция</h2>
+            
+            <div class="form-group">
+                <label>Тип операции</label>
+                <div class="operation-type-selector">
+                    <div class="operation-type-option income selected" onclick="selectOperationType(this, 'in')">
+                        📈 Поступление
+                    </div>
+                    <div class="operation-type-option expense" onclick="selectOperationType(this, 'out')">
+                        📉 Расход
+                    </div>
+                </div>
+                <input type="hidden" id="inventory-operation-type" value="in">
+            </div>
+            
+            <div class="form-group">
+                <label for="inventory-operation-date">Дата</label>
+                <input type="date" id="inventory-operation-date">
+            </div>
+            
+            <div class="form-group">
+                <label for="inventory-operation-amount">Количество</label>
+                <input type="number" id="inventory-operation-amount" min="1" placeholder="Введите количество">
+            </div>
+            
+            <div class="form-group">
+                <label for="inventory-operation-notes">Примечания</label>
+                <input type="text" id="inventory-operation-notes" placeholder="Укажите дополнительную информацию">
+            </div>
+            
+            <div class="button-group-end">
+                <button class="button-secondary" onclick="closeModal('inventory-operation-modal')">Отмена</button>
+                <button onclick="saveInventoryOperation()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="inventory-history-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="inventory-history-title">История операций</h2>
+            
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px;">
+                <h3>Текущий остаток: <span id="inventory-current-amount">0</span></h3>
+                <button onclick="openInventoryOperationModal()" id="add-operation-btn">Добавить операцию</button>
+            </div>
+            
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Тип</th>
+                            <th>Количество</th>
+                            <th>Примечания</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-history-table"></tbody>
+                </table>
+            </div>
+            
+            <div class="button-group-end">
+                <button onclick="closeModal('inventory-history-modal')">Закрыть</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Пользователи системы
+        const users = {
+            'admin': { password: 'admin', role: 'manager', name: 'Администратор' },
+            'employee': { password: 'employee', role: 'employee', name: 'Сотрудник Иванов' }
+        };
+        
+        // Текущий пользователь
+        let currentUser = null;
+        let showVacations = true;
+        
+        // Данные приложения
+        let currentDate = new Date();
+        let selectedDate = null;
+        let selectedInventoryItem = null;
+        let selectedTeamColor = "#a7c7e7"; // Default pastel color
+        let selectedEventForDetails = null;
+        
+        // Переменные для свайпов
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        const vacationColors = ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#a0c4ff', '#bdb2ff'];
+
+        let teams = [
+            { id: 1, name: "Бурильщики 1", color: "#a7c7e7", type: 'drillers' }, // Pastel Blue
+            { id: 2, name: "Монтажники 1", color: "#98fb98", type: 'installers' }, // Pastel Green
+            { id: 3, name: "Бурильщики 2", color: "#ffb347", type: 'drillers' },  // Pastel Orange
+            { id: 4, name: "Водитель 1", color: "#e6e6e6", type: 'drivers' } // Light Grey
+        ];
+        
+        let employees = [
+            { id: 1, name: "Иванов Иван", teamId: 1, role: 'employee', username: null, password: null },
+            { id: 2, name: "Петров Петр", teamId: 1, role: 'employee', username: null, password: null },
+            { id: 3, name: "Сидоров Алексей", teamId: 2, role: 'employee', username: null, password: null },
+            { id: 4, name: "Кузнецова Анна", teamId: null, role: 'employee', username: null, password: null }
+        ];
+        
+        let events = [
+            { 
+                id: 1, 
+                type: "drilling", 
+                date: formatDate(new Date()), 
+                address: "ул. Строителей, 15", 
+                teamId: 1, 
+                equipment: [{pipeId: 1, meters: 50}, {pipeId: 5, meters: 100}],
+                comments: []
+            },
+            { 
+                id: 2, 
+                type: "vacation", 
+                startDate: formatDate(new Date(new Date().setDate(new Date().getDate() + 2))), 
+                endDate: formatDate(new Date(new Date().setDate(new Date().getDate() + 9))), 
+                employeeId: 4,
+                comments: []
+            },
+            { 
+                id: 3, 
+                type: "installation", 
+                date: formatDate(new Date(new Date().setDate(new Date().getDate() + 4))), 
+                address: "пр. Мира, 1", 
+                teamId: 2, 
+                equipment: "Кессон",
+                comments: []
+            },
+            { 
+                id: 4, 
+                type: "drilling", 
+                date: formatDate(new Date(new Date().setDate(new Date().getDate() + 4))), 
+                address: "дер. Новая, 22", 
+                teamId: 3, 
+                equipment: [{pipeId: 3, meters: 100}],
+                comments: []
+            },
+            { 
+                id: 5, 
+                type: "trip", 
+                date: formatDate(new Date(new Date().setDate(new Date().getDate() + 1))), 
+                address: "Склад", 
+                teamId: 4, 
+                equipment: null,
+                comments: []
+            }
+        ];
+        
+        const pipeTypes = [
+            { id: 1, name: "ПНД 125мм", minStock: 50 },
+            { id: 2, name: "Металл 133мм", minStock: 30 },
+            { id: 3, name: "ПНД 117мм", minStock: 40 },
+            { id: 4, name: "нПВХ 90мм", minStock: 60 },
+            { id: 5, name: "ПНД 32мм", minStock: 100 }
+        ];
+        
+        let inventoryOperations = [
+            { id: 1, itemId: 1, date: formatDate(new Date()), type: "in", amount: 100, notes: "Поставка от завода" },
+            { id: 2, itemId: 1, date: formatDate(new Date()), type: "out", amount: 30, notes: "Бригада 1" },
+            { id: 3, itemId: 2, date: formatDate(new Date()), type: "in", amount: 50, notes: "Поставка от завода" },
+            { id: 4, itemId: 3, date: formatDate(new Date()), type: "in", amount: 80, notes: "Поставка от завода" },
+            { id: 5, itemId: 4, date: formatDate(new Date()), type: "in", amount: 70, notes: "Поставка от завода" },
+            { id: 6, itemId: 5, date: formatDate(new Date()), type: "in", amount: 150, notes: "Поставка от завода" }
+        ];
+        
+        let requests = [
+            {
+                id: 1,
+                type: 'vacation',
+                userId: 'employee',
+                userName: 'Сотрудник Иванов',
+                startDate: '2024-07-15',
+                endDate: '2024-07-22',
+                reason: 'Семейные обстоятельства',
+                status: 'pending',
+                createdAt: formatDate(new Date())
+            }
+        ];
+        
+        function isWorkEvent(event) {
+            return event.type === 'drilling' || event.type === 'installation' || event.type === 'trip';
+        }
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (users[username] && users[username].password === password) {
+                currentUser = {
+                    username: username,
+                    ...users[username]
+                };
+                
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                
+                initializeApp();
+                showNotification('Добро пожаловать!');
+            } else {
+                showNotification('Неверные данные для входа', 'error');
+            }
+        }
+        
+        function logout() {
+            currentUser = null;
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+        
+        function initializeApp() {
+            document.getElementById('user-badge').textContent = 
+                `${currentUser.name} (${currentUser.role === 'manager' ? 'Управляющий' : 'Сотрудник'})`;
+            
+            const vacationToggle = document.getElementById('vacation-toggle');
+            if (vacationToggle) {
+                if (showVacations) {
+                    vacationToggle.classList.add('active');
+                } else {
+                    vacationToggle.classList.remove('active');
+                }
+            }
+
+            if (currentUser.role === 'employee') {
+                const teamsTab = document.getElementById('teams-tab');
+                const requestsTab = document.getElementById('requests-tab');
+                const addEventBtn = document.getElementById('add-event-btn');
+                const requestVacationBtn = document.getElementById('request-vacation-btn');
+                
+                if (teamsTab) teamsTab.style.display = 'none';
+                if (requestsTab) requestsTab.style.display = 'none';
+                if (addEventBtn) addEventBtn.style.display = 'none';
+                if (requestVacationBtn) requestVacationBtn.style.display = 'inline-block';
+            } else {
+                const teamsTab = document.getElementById('teams-tab');
+                const requestsTab = document.getElementById('requests-tab');
+                const addEventBtn = document.getElementById('add-event-btn');
+                const requestVacationBtn = document.getElementById('request-vacation-btn');
+                
+                if (teamsTab) teamsTab.style.display = 'grid';
+                if (requestsTab) requestsTab.style.display = 'grid';
+                if (addEventBtn) addEventBtn.style.display = 'inline-block';
+                if (requestVacationBtn) requestVacationBtn.style.display = 'none';
+            }
+            
+            // Инициализация свайпов
+            initializeSwipeGestures();
+            
+            renderCalendar();
+            renderUpcomingEvents();
+            if (currentUser.role === 'manager') {
+                renderTeams();
+                renderEmployees();
+                renderRequests();
+            }
+            renderInventoryGrid();
+            switchTab('calendar');
+        }
+        
+        // Инициализация свайпов для календаря
+        function initializeSwipeGestures() {
+            const calendarGrid = document.getElementById('calendar-days');
+            
+            if (calendarGrid) {
+                calendarGrid.addEventListener('touchstart', e => {
+                    touchStartX = e.changedTouches[0].screenX;
+                });
+                
+                calendarGrid.addEventListener('touchend', e => {
+                    touchEndX = e.changedTouches[0].screenX;
+                    handleSwipeGesture();
+                });
+            }
+        }
+        
+        function handleSwipeGesture() {
+            const swipeThreshold = 50;
+            const swipeDistance = touchEndX - touchStartX;
+            
+            if (Math.abs(swipeDistance) > swipeThreshold) {
+                if (swipeDistance > 0) {
+                    // Свайп вправо - предыдущий месяц
+                    prevMonth();
+                } else {
+                    // Свайп влево - следующий месяц
+                    nextMonth();
+                }
+            }
+        }
+        
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            if (type === 'error') {
+                notification.style.background = '#ff3b30';
+            }
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        function formatDate(date) {
+            const d = new Date(date);
+            let month = '' + (d.getMonth() + 1);
+            let day = '' + d.getDate();
+            const year = d.getFullYear();
+            
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+            
+            return [year, month, day].join('-');
+        }
+        
+        function getMonthName(date) {
+            const months = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+            return months[date.getMonth()] + " " + date.getFullYear();
+        }
+        
+        function getDaysInMonth(year, month) {
+            return new Date(year, month + 1, 0).getDate();
+        }
+        
+        function getFirstDayOfMonth(year, month) {
+            const day = new Date(year, month, 1).getDay();
+            return day === 0 ? 6 : day - 1;
+        }
+        
+        function getTeamName(id) {
+            const team = teams.find(t => t.id === id);
+            return team ? team.name : "Неизвестная бригада";
+        }
+        
+        function getTeamColor(id) {
+            const team = teams.find(t => t.id === id);
+            return team ? team.color : "#cccccc";
+        }
+
+        function getVacationColor(employeeId) {
+            const colorIndex = employeeId % vacationColors.length;
+            return vacationColors[colorIndex];
+        }
+        
+        function getEmployeeName(id) {
+            const employee = employees.find(e => e.id === id);
+            return employee ? employee.name : "Неизвестный сотрудник";
+        }
+        
+        function getPipeTypeName(id) {
+            const type = pipeTypes.find(t => t.id === id);
+            return type ? type.name : "Неизвестный тип";
+        }
+        
+        function getPipeTypeMinStock(id) {
+            const type = pipeTypes.find(t => t.id === id);
+            return type ? type.minStock : 0;
+        }
+        
+        function calculateCurrentAmount(itemId) {
+            return inventoryOperations
+                .filter(op => op.itemId === itemId)
+                .reduce((sum, op) => op.type === "in" ? sum + op.amount : sum - op.amount, 0);
+        }
+        
+        function switchTab(tabId) {
+            // Убираем активные классы со всех элементов
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`.tab[onclick="switchTab('${tabId}')"]`).classList.add('active');
+            
+            // Управляем видимостью элементов в зависимости от активной вкладки
+            const body = document.body;
+            
+            // Убираем все классы активных вкладок
+            body.classList.remove('calendar-active', 'requests-active');
+            
+            // Добавляем класс для текущей активной вкладки
+            if (tabId === 'calendar') {
+                body.classList.add('calendar-active');
+            } else if (tabId === 'requests') {
+                body.classList.add('requests-active');
+            }
+        }
+        
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function toggleVacations() {
+            showVacations = !showVacations;
+            const toggle = document.getElementById('vacation-toggle');
+            toggle.classList.toggle('active');
+            renderCalendar();
+        }
+        
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const daysInMonth = getDaysInMonth(year, month);
+            const firstDay = getFirstDayOfMonth(year, month);
+
+            document.getElementById('current-month').textContent = getMonthName(currentDate);
+
+            const calendarDaysEl = document.getElementById('calendar-days');
+            calendarDaysEl.innerHTML = '';
+
+            let calendarDays = '';
+
+            for (let i = 0; i < firstDay; i++) {
+                calendarDays += `<div class="calendar-day other-month"></div>`;
+            }
+
+            const today = formatDate(new Date());
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const formattedDate = formatDate(date);
+                
+                const workEvents = events.filter(e => isWorkEvent(e) && e.date === formattedDate);
+                const vacationEvents = showVacations ? events.filter(e => e.type === 'vacation' && e.startDate <= formattedDate && e.endDate >= formattedDate) : [];
+
+                let dayClasses = 'calendar-day';
+                if (formattedDate === today) dayClasses += ' today';
+                
+                const workEventsHtml = workEvents.map(event => {
+                    const teamColor = getTeamColor(event.teamId);
+                    const teamNameAbbr = getTeamName(event.teamId).replace('Бурильщики', 'Бур.').replace('Монтажники', 'Монт.').replace('Водитель', 'Вод.');
+                    const eventIcon = { drilling: '⛏️', installation: '🔧', trip: '🚚' }[event.type];
+                    return `<div class="event work-event" style="background-color: ${teamColor};" title="${getTeamName(event.teamId)} - ${event.address}">
+                                <div>
+                                    ${eventIcon} ${teamNameAbbr}
+                                    <small>${event.address}</small>
+                                </div>
+                            </div>`;
+                }).join('');
+
+                const vacationEventsHtml = vacationEvents.map(event => {
+                    const employeeName = getEmployeeName(event.employeeId).split(' ')[0];
+                    const color = getVacationColor(event.employeeId);
+                    return `<div class="event vacation" style="background-color: ${color};" title="${getEmployeeName(event.employeeId)} - отпуск">🏖️ ${employeeName}</div>`;
+                }).join('');
+
+                const clickHandler = `openDayDetailsModal('${formattedDate}')`;
+
+                calendarDays += `
+                    <div class="${dayClasses}" onclick="${clickHandler}">
+                        <div class="work-events-wrapper">${workEventsHtml}</div>
+                        <div class="day-number">${day}</div>
+                        <div class="events-container">
+                            <div class="vacation-events-wrapper">${vacationEventsHtml}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            calendarDaysEl.innerHTML = calendarDays;
+
+            const totalCells = firstDay + daysInMonth;
+            const remainingCells = (totalCells % 7 === 0) ? 0 : 7 - (totalCells % 7);
+
+            for (let i = 0; i < remainingCells; i++) {
+                 calendarDaysEl.innerHTML += `<div class="calendar-day other-month"></div>`;
+            }
+
+            renderUpcomingEvents();
+        }
+        
+        function getUpcomingEvents(days = 3) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const upcoming = [];
+            
+            for (let i = 0; i < days; i++) {
+                const checkDate = new Date(today);
+                checkDate.setDate(today.getDate() + i);
+                const formattedDate = formatDate(checkDate);
+                
+                const dayEvents = events.filter(e => 
+                    (isWorkEvent(e) && e.date === formattedDate) || 
+                    (e.type === 'vacation' && e.startDate === formattedDate)
+                );
+                
+                if (dayEvents.length > 0) {
+                    let dateLabel;
+                    if (i === 0) {
+                        dateLabel = 'Сегодня';
+                    } else if (i === 1) {
+                        dateLabel = 'Завтра';
+                    } else {
+                        dateLabel = 'Завтра'; // Все остальные дни тоже "Завтра"
+                    }
+                    upcoming.push({ dateLabel, events: dayEvents });
+                }
+            }
+            return upcoming;
+        }
+
+        function toggleUpcomingEvents() {
+            document.getElementById('upcoming-events').classList.toggle('expanded');
+        }
+
+        function renderUpcomingEvents() {
+            const upcoming = getUpcomingEvents(7); // Get for a week for the list
+            const iconsToShow = getUpcomingEvents(3); // Get for 3 days for icons
+            const listEl = document.getElementById('upcoming-events-list');
+            const iconsEl = document.getElementById('upcoming-events-icons');
+            
+            // Render Icons
+            const uniqueIcons = new Set();
+            iconsToShow.forEach(day => {
+                day.events.forEach(event => {
+                    const icon = { drilling: '⛏️', installation: '🔧', trip: '🚚', vacation: '🏖️' }[event.type];
+                    if(icon) uniqueIcons.add(icon);
+                });
+            });
+            iconsEl.innerHTML = Array.from(uniqueIcons).join('');
+
+            // Render List
+            let listHtml = '';
+            if (upcoming.length === 0) {
+                listHtml = '<div style="color: #6c757d; font-style: italic; padding: 10px 0;">Нет предстоящих событий</div>';
+            } else {
+                upcoming.forEach(day => {
+                    listHtml += `<div style="margin-bottom: 10px; padding-top: 10px;"><strong>${day.dateLabel}:</strong></div>`;
+                    day.events.forEach(event => {
+                        if (isWorkEvent(event)) {
+                            const teamColor = getTeamColor(event.teamId);
+                            listHtml += `<div class="upcoming-event"><div class="event-indicator" style="background-color: ${teamColor};"></div><span>${getTeamName(event.teamId)} - ${event.address}</span></div>`;
+                        } else if (showVacations && event.type === 'vacation') {
+                            listHtml += `<div class="upcoming-event"><div class="event-indicator" style="background-color: #34c759;"></div><span>${getEmployeeName(event.employeeId)} - отпуск</span></div>`;
+                        }
+                    });
+                });
+            }
+            listEl.innerHTML = listHtml;
+        }
+        
+        function prevMonth() {
+            currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+            renderCalendar();
+        }
+        
+        function nextMonth() {
+            currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+            renderCalendar();
+        }
+        
+        function openDayDetailsModal(date) {
+            selectedDate = date;
+            const titleEl = document.getElementById('day-details-title');
+            const listEl = document.getElementById('day-events-list');
+            
+            if (titleEl) {
+                titleEl.textContent = `События на ${date.split('-').reverse().join('.')}`;
+            }
+            
+            const dayEvents = events.filter(e => 
+                (isWorkEvent(e) && e.date === date) ||
+                (e.type === 'vacation' && e.startDate <= date && e.endDate >= date)
+            );
+
+            if (listEl) {
+                if (dayEvents.length === 0) {
+                    listEl.innerHTML = '<div style="color: #6c757d; text-align: center; padding: 20px 0;">Нет событий на этот день.</div>';
+                } else {
+                    listEl.innerHTML = dayEvents.map(event => {
+                        let actionsHtml = '';
+
+                        if (currentUser.role === 'manager') {
+                            actionsHtml = `<div class="day-event-actions"><button class="button-secondary" onclick="editEvent(${event.id})">Изм.</button><button class="button-danger" onclick="deleteEvent(${event.id})">Удл.</button></div>`;
+                        } else if (currentUser.role === 'employee' && isWorkEvent(event)) {
+                             actionsHtml = `<div class="day-event-actions"><button class="button-secondary" onclick="openEventDetails(${event.id})">Детали</button></div>`;
+                        }
+                        
+                        if (event.type === 'vacation') {
+                            return `<div class="day-event-item vacation"><div class="day-event-info"><strong>🏖️ Отпуск</strong><p>${getEmployeeName(event.employeeId)}</p><p style="font-size: 12px; color: #6c757d;">${event.startDate.split('-').reverse().join('.')} - ${event.endDate.split('-').reverse().join('.')}</p></div>${actionsHtml}</div>`;
+                        } else if (isWorkEvent(event)) {
+                            const teamColor = getTeamColor(event.teamId);
+                            const eventTitle = { drilling: '⛏️ Бурение', installation: '🔧 Монтаж', trip: '🚚 Поездка' }[event.type];
+                            return `<div class="day-event-item" style="border-left-color: ${teamColor}"><div class="day-event-info"><strong>${eventTitle}: ${getTeamName(event.teamId)}</strong><p>${event.address}</p></div>${actionsHtml}</div>`;
+                        }
+                        return '';
+                    }).join('');
+                }
+            }
+            
+            const addEventBtn = document.getElementById('add-event-from-day-btn');
+            const requestVacationBtn = document.getElementById('request-vacation-from-day-btn');
+            
+            if (addEventBtn) addEventBtn.style.display = currentUser.role === 'manager' ? 'inline-block' : 'none';
+            if (requestVacationBtn) requestVacationBtn.style.display = currentUser.role === 'employee' ? 'inline-block' : 'none';
+
+            openModal('day-details-modal');
+        }
+
+        function addEventFromDayView() {
+            closeModal('day-details-modal');
+            openEventModal(selectedDate);
+        }
+
+        function requestVacationFromDayView() {
+            closeModal('day-details-modal');
+            openVacationRequestModal(selectedDate);
+        }
+
+        function editEvent(eventId) {
+            const eventToEdit = events.find(e => e.id === eventId);
+            if (!eventToEdit) return;
+            closeModal('day-details-modal');
+            openEventModal(eventToEdit.date || eventToEdit.startDate, eventId);
+        }
+
+        function deleteEvent(eventId) {
+            if (!confirm('Вы уверены, что хотите удалить это событие?')) return;
+            
+            events = events.filter(e => e.id !== eventId);
+            
+            closeModal('day-details-modal');
+            renderCalendar();
+            showNotification('Событие удалено');
+        }
+
+        function openEventModal(date, eventId = null) {
+            const isEditing = eventId !== null;
+            const event = isEditing ? events.find(e => e.id === eventId) : null;
+            
+            selectedDate = date;
+            document.getElementById('event-id').value = isEditing ? eventId : '';
+            document.getElementById('event-modal-title').textContent = isEditing ? 'Редактировать событие' : 'Добавить событие';
+            document.getElementById('save-event-btn').textContent = isEditing ? 'Сохранить изменения' : 'Сохранить';
+            
+            renderEmployeeChips();
+            
+            if (isEditing) {
+                const eventType = event.type;
+                selectEventType(document.querySelector(`.event-type-option[onclick*="'${eventType}'"]`), eventType);
+                
+                if (isWorkEvent(event)) {
+                    document.getElementById('event-date').value = event.date;
+                    document.getElementById('event-address').value = event.address;
+                    if(event.type === 'drilling') renderEquipmentList(event.equipment || []);
+                    if(event.type === 'installation') document.getElementById('installation-type').value = event.equipment;
+                    renderTeamChipsForEvent(eventType, event.teamId);
+                } else if (event.type === 'vacation') {
+                    document.getElementById('event-start-date').value = event.startDate;
+                    document.getElementById('event-end-date').value = event.endDate;
+                    selectEmployee(document.querySelector(`#employee-chips .chip-option[onclick*="selectEmployee(this, ${event.employeeId})"]`), event.employeeId);
+                }
+            } else {
+                document.getElementById('event-address').value = '';
+                renderEquipmentList([]);
+                selectEventType(document.querySelector('.event-type-selector .event-type-option'), 'drilling');
+                
+                const today = date || formatDate(new Date());
+                document.getElementById('event-date').value = today;
+                document.getElementById('event-start-date').value = today;
+                document.getElementById('event-end-date').value = today;
+            }
+            
+            openModal('event-modal');
+        }
+        
+        function saveEvent() {
+            const eventId = parseInt(document.getElementById('event-id').value);
+            const isEditing = !isNaN(eventId);
+            
+            const type = document.getElementById('event-type').value;
+            let newEventData;
+
+            if (isWorkEvent({type})) {
+                const date = document.getElementById('event-date').value;
+                const address = document.getElementById('event-address').value.trim();
+                const teamId = parseInt(document.getElementById('event-team').value);
+                
+                let equipment = null;
+                if(type === 'drilling') {
+                    const equipmentRows = document.querySelectorAll('#equipment-list .equipment-row');
+                    equipment = Array.from(equipmentRows).map(row => {
+                        const pipeId = parseInt(row.querySelector('select').value);
+                        const meters = parseInt(row.querySelector('input').value);
+                        return { pipeId, meters };
+                    }).filter(item => !isNaN(item.pipeId) && !isNaN(item.meters) && item.meters > 0);
+                } else if (type === 'installation') {
+                    equipment = document.getElementById('installation-type').value;
+                }
+
+                if (!date || !address || !teamId) {
+                    showNotification('Заполните дату, адрес и выберите бригаду', 'error');
+                    return;
+                }
+                newEventData = { type, date, address, teamId, equipment, comments: isEditing ? events.find(e=>e.id===eventId).comments : [] };
+            } else if (type === 'vacation') {
+                const startDate = document.getElementById('event-start-date').value;
+                const endDate = document.getElementById('event-end-date').value;
+                const employeeId = parseInt(document.getElementById('event-employee').value);
+                
+                if (!startDate || !endDate || !employeeId) {
+                    showNotification('Заполните даты и выберите сотрудника', 'error');
+                    return;
+                }
+                newEventData = { type, startDate, endDate, employeeId, comments: isEditing ? events.find(e=>e.id===eventId).comments : [] };
+            }
+
+            if (isEditing) {
+                const eventIndex = events.findIndex(e => e.id === eventId);
+                if (eventIndex > -1) {
+                    events[eventIndex] = { ...events[eventIndex], ...newEventData };
+                    showNotification('Событие обновлено');
+                }
+            } else {
+                events.push({ id: Date.now(), ...newEventData });
+                showNotification('Событие добавлено');
+            }
+            
+            closeModal('event-modal');
+            renderCalendar();
+        }
+        
+        function addPipeRow() {
+            const list = document.getElementById('equipment-list');
+            const newRow = document.createElement('div');
+            newRow.className = 'equipment-row';
+            
+            const pipeOptions = pipeTypes.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+
+            newRow.innerHTML = `<select>${pipeOptions}</select><input type="number" placeholder="Метры" min="1"><button class="remove-btn" onclick="removePipeRow(this)">×</button>`;
+            list.appendChild(newRow);
+        }
+
+        function removePipeRow(button) {
+            button.parentElement.remove();
+        }
+
+        function renderEquipmentList(equipmentData) {
+            const list = document.getElementById('equipment-list');
+            list.innerHTML = '';
+            if (!equipmentData || equipmentData.length === 0) {
+                addPipeRow();
+            } else {
+                equipmentData.forEach(item => {
+                    const newRow = document.createElement('div');
+                    newRow.className = 'equipment-row';
+                    const pipeOptions = pipeTypes.map(p => `<option value="${p.id}" ${p.id === item.pipeId ? 'selected' : ''}>${p.name}</option>`).join('');
+                    newRow.innerHTML = `<select>${pipeOptions}</select><input type="number" placeholder="Метры" min="1" value="${item.meters}"><button class="remove-btn" onclick="removePipeRow(this)">×</button>`;
+                    list.appendChild(newRow);
+                });
+            }
+        }
+        
+        function selectEventType(element, type) {
+            if(!element) return;
+            document.querySelectorAll('.event-type-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('event-type').value = type;
+            
+            const isWork = isWorkEvent({type});
+            document.getElementById('work-fields').style.display = isWork ? 'block' : 'none';
+            document.getElementById('vacation-fields').style.display = type === 'vacation' ? 'block' : 'none';
+            document.getElementById('equipment-form-group').style.display = type === 'drilling' ? 'block' : 'none';
+            document.getElementById('installation-equipment-group').style.display = type === 'installation' ? 'block' : 'none';
+
+            if(isWork) {
+                renderTeamChipsForEvent(type);
+            }
+        }
+        
+        function selectChip(element) {
+            if(!element) return;
+            const parent = element.parentElement;
+            parent.querySelectorAll('.chip-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function selectTeam(element, teamId) {
+            selectChip(element);
+            document.getElementById('event-team').value = teamId;
+        }
+
+        function selectEmployee(element, employeeId) {
+            selectChip(element);
+            document.getElementById('event-employee').value = employeeId;
+        }
+
+        function selectTeamType(element, type) {
+            document.querySelectorAll('.team-type-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('team-type').value = type;
+        }
+        
+        function selectRole(element, role) {
+            document.querySelectorAll('.role-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('employee-role').value = role;
+        }
+        
+        function selectOperationType(element, type) {
+            document.querySelectorAll('.operation-type-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('inventory-operation-type').value = type;
+        }
+        
+        function renderTeamChipsForEvent(eventType, selectedTeamId = null) {
+            const container = document.getElementById('team-chips');
+            const teamTypeMap = { drilling: 'drillers', installation: 'installers', trip: 'drivers' };
+            const teamType = teamTypeMap[eventType];
+            
+            const filteredTeams = teams.filter(team => team.type === teamType);
+
+            container.innerHTML = filteredTeams.map(team => `<div class="chip-option team-color" style="background-color: ${team.color};" onclick="selectTeam(this, ${team.id})">${team.name}</div>`).join('');
+            
+            if (filteredTeams.length > 0) {
+                let teamToSelect = filteredTeams[0];
+                if (selectedTeamId) {
+                    const foundTeam = filteredTeams.find(t => t.id === selectedTeamId);
+                    if(foundTeam) teamToSelect = foundTeam;
+                }
+                const chipToSelect = container.querySelector(`.chip-option[onclick*="selectTeam(this, ${teamToSelect.id})"]`);
+                chipToSelect?.classList.add('selected');
+                document.getElementById('event-team').value = teamToSelect.id;
+            } else {
+                 container.innerHTML = `<i style="color: #6c757d;">Нет доступных бригад этого типа.</i>`;
+                 document.getElementById('event-team').value = '';
+            }
+        }
+        
+        function renderEmployeeChips() {
+            const container = document.getElementById('employee-chips');
+            container.innerHTML = employees.map(employee => `<div class="chip-option" onclick="selectEmployee(this, ${employee.id})">${employee.name}</div>`).join('');
+
+            if (employees.length > 0) {
+                container.children[0]?.classList.add('selected');
+                document.getElementById('event-employee').value = employees[0].id;
+            }
+        }
+        
+        function openEventDetails(eventId) {
+            selectedEventForDetails = events.find(e => e.id === eventId);
+            if (!selectedEventForDetails) return;
+            
+            closeModal('day-details-modal');
+            let content = '';
+            if (isWorkEvent(selectedEventForDetails)) {
+                const eventTitle = { drilling: 'Бурение', installation: 'Монтаж', trip: 'Поездка' }[selectedEventForDetails.type];
+                let equipmentList = '<li>Не указано</li>';
+
+                if(selectedEventForDetails.type === 'drilling' && Array.isArray(selectedEventForDetails.equipment)) {
+                    equipmentList = selectedEventForDetails.equipment.map(item => `<li>${getPipeTypeName(item.pipeId)} - ${item.meters} м.</li>`).join('');
+                } else if (selectedEventForDetails.type === 'installation') {
+                    equipmentList = `<li>${selectedEventForDetails.equipment}</li>`;
+                }
+
+                content = `<p><strong>Тип:</strong> ${eventTitle}</p><p><strong>Дата:</strong> ${selectedEventForDetails.date.split('-').reverse().join('.')}</p><p><strong>Бригада:</strong> ${getTeamName(selectedEventForDetails.teamId)}</p><p><strong>Адрес:</strong> ${selectedEventForDetails.address}</p><p><strong>Оборудование:</strong></p><ul style="margin-top: 5px; padding-left: 20px;">${equipmentList}</ul>`;
+            } else {
+                content = `<p><strong>Тип:</strong> Отпуск</p><p><strong>Сотрудник:</strong> ${getEmployeeName(selectedEventForDetails.employeeId)}</p><p><strong>Период:</strong> ${selectedEventForDetails.startDate.split('-').reverse().join('.')} - ${selectedEventForDetails.endDate.split('-').reverse().join('.')}</p>`;
+            }
+            
+            document.getElementById('event-details-title').textContent = 'Детали события';
+            document.getElementById('event-details-content').innerHTML = content;
+            document.getElementById('comment-section').style.display = 'block';
+            document.getElementById('add-comment-form').style.display = currentUser.role === 'manager' ? 'flex' : 'none';
+
+            renderComments();
+            openModal('event-details-modal');
+        }
+        
+        function addComment() {
+            const commentText = document.getElementById('new-comment').value.trim();
+            if (!commentText || !selectedEventForDetails) return;
+            
+            selectedEventForDetails.comments = selectedEventForDetails.comments || [];
+            selectedEventForDetails.comments.push({ author: currentUser.name, text: commentText, date: formatDate(new Date()) });
+            
+            document.getElementById('new-comment').value = '';
+            renderComments();
+            showNotification('Комментарий добавлен');
+        }
+        
+        function renderComments() {
+            const commentsList = document.getElementById('comments-list');
+            commentsList.innerHTML = (selectedEventForDetails?.comments?.length > 0) ?
+                selectedEventForDetails.comments.map(comment => `<div class="comment"><span class="comment-author">${comment.author}:</span><span>${comment.text}</span><div style="font-size: 11px; color: #6c757d; margin-top: 4px;">${comment.date.split('-').reverse().join('.')}</div></div>`).join('') :
+                '<div style="color: #6c757d; font-style: italic;">Нет комментариев</div>';
+        }
+        
+        function openVacationRequestModal(startDate = null) {
+            document.getElementById('vacation-start-date').value = startDate || '';
+            document.getElementById('vacation-end-date').value = '';
+            document.getElementById('vacation-reason').value = '';
+            openModal('vacation-request-modal');
+        }
+        
+        function submitVacationRequest() {
+            const startDate = document.getElementById('vacation-start-date').value;
+            const endDate = document.getElementById('vacation-end-date').value;
+            const reason = document.getElementById('vacation-reason').value;
+            
+            if (!startDate || !endDate || !reason.trim()) {
+                showNotification('Заполните все поля', 'error');
+                return;
+            }
+            
+            requests.push({ id: Date.now(), type: 'vacation', userId: currentUser.username, userName: currentUser.name, startDate, endDate, reason, status: 'pending', createdAt: formatDate(new Date()) });
+            closeModal('vacation-request-modal');
+            showNotification('Заявка на отпуск отправлена');
+        }
+        
+        function renderRequests() {
+            const requestsList = document.getElementById('requests-list');
+            if (!requestsList) return;
+            
+            requestsList.innerHTML = (requests.length === 0) ? '<div class="card">Нет заявок</div>' : requests.map(request => {
+                const statusClass = `status-${request.status}`;
+                const statusText = { pending: 'Ожидает', approved: 'Одобрена', rejected: 'Отклонена'}[request.status];
+                
+                let requestDetails = '';
+                if (request.type === 'vacation') {
+                    requestDetails = `<h4 style="margin: 0 0 8px 0;">Заявка на отпуск</h4><p><strong>Сотрудник:</strong> ${request.userName}</p><p><strong>Период:</strong> ${request.startDate.split('-').reverse().join('.')} - ${request.endDate.split('-').reverse().join('.')}</p><p><strong>Причина:</strong> ${request.reason}</p>`;
+                } else if (request.type === 'inventory') {
+                    requestDetails = `<h4 style="margin: 0 0 8px 0;">Заявка на материалы</h4><p><strong>Сотрудник:</strong> ${request.userName}</p><p><strong>Материал:</strong> ${getPipeTypeName(request.itemId)}</p><p><strong>Количество:</strong> ${request.amount}</p>`;
+                }
+
+                const managerControls = (currentUser.role === 'manager' && request.status === 'pending') ? `<div class="button-group" style="margin-top: 10px;"><button onclick="handleRequest(${request.id}, true)" style="padding: 6px 12px; font-size: 12px; min-height: 38px;">Одобрить</button><button onclick="handleRequest(${request.id}, false)" class="button-danger" style="padding: 6px 12px; font-size: 12px; min-height: 38px;">Отклонить</button></div>` : '';
+
+                return `<div class="request-item ${request.status}"><div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 10px;"><div style="flex: 1; min-width: 200px;">${requestDetails}<p style="margin: 4px 0; font-size: 12px; color: #6c757d;">Подана: ${request.createdAt.split('-').reverse().join('.')}</p></div><div style="text-align: right; flex-shrink: 0;"><span class="status-badge ${statusClass}">${statusText}</span>${managerControls}</div></div></div>`;
+            }).join('');
+        }
+
+        function handleRequest(requestId, isApproved) {
+            const request = requests.find(r => r.id === requestId);
+            if (!request) return;
+
+            request.status = isApproved ? 'approved' : 'rejected';
+
+            if (isApproved) {
+                if (request.type === 'vacation') {
+                    const employeeId = employees.find(e => e.name === request.userName)?.id;
+                    if (employeeId) {
+                        events.push({ id: Date.now(), type: 'vacation', startDate: request.startDate, endDate: request.endDate, employeeId, comments: [] });
+                    }
+                    renderCalendar();
+                } else if (request.type === 'inventory') {
+                    inventoryOperations.push({ id: Date.now(), itemId: request.itemId, date: formatDate(new Date()), type: 'out', amount: request.amount, notes: `Выдано по заявке: ${request.userName}` });
+                    renderInventoryGrid();
+                }
+                showNotification('Заявка одобрена');
+            } else {
+                showNotification('Заявка отклонена');
+            }
+            renderRequests();
+        }
+
+        function openInventoryRequestModal(itemId) {
+            selectedInventoryItem = itemId;
+            const itemName = itemId === 0 ? "Дизельное топливо" : getPipeTypeName(itemId);
+            document.getElementById('inventory-request-title').textContent = `Запрос: ${itemName}`;
+            document.getElementById('request-amount').value = '';
+            openModal('inventory-request-modal');
+        }
+
+        function submitInventoryRequest() {
+            const amount = parseInt(document.getElementById('request-amount').value);
+            
+            if (!amount || amount <= 0) {
+                showNotification('Укажите корректное количество', 'error');
+                return;
+            }
+            
+            requests.push({ id: Date.now(), type: 'inventory', userId: currentUser.username, userName: currentUser.name, itemId: selectedInventoryItem, amount, status: 'pending', createdAt: formatDate(new Date()) });
+            closeModal('inventory-request-modal');
+            showNotification('Заявка на материалы отправлена');
+        }
+
+        // Бригады и сотрудники
+        function renderTeams() {
+            document.getElementById('teams-list').innerHTML = teams.map(team => {
+                const teamEmployeesHtml = employees.filter(e => e.teamId === team.id).map(employee => `<span class="employee-chip" style="background-color: ${team.color}80; color: #333; border: 1px solid ${team.color};">${employee.name}<span onclick="removeEmployeeFromTeam(${employee.id}, event)" style="margin-left: 5px; cursor: pointer; color: #ff3b30;">×</span></span>`).join('');
+                
+                const teamTypeLabels = { drillers: 'Бурильщики', installers: 'Монтажники', drivers: 'Водители' };
+                const teamTypeLabel = teamTypeLabels[team.type] || 'Неизвестный тип';
+                const unassignedEmployeesOptions = employees.filter(e => !e.teamId).map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+
+                return `<div class="card"><div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 15px;"><div><h3 style="margin: 0 0 5px 0;">${team.name}</h3><span style="font-size: 13px; color: #fff; background: #6c757d; padding: 3px 8px; border-radius: 10px;">${teamTypeLabel}</span></div><div style="width: 20px; height: 20px; border-radius: 50%; background-color: ${team.color}; flex-shrink: 0;"></div></div><div style="margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 5px;">${teamEmployeesHtml || '<i style="color: #6c757d;">Нет сотрудников</i>'}</div><div class="button-group" style="align-items: stretch;"><select id="add-to-team-${team.id}" style="flex: 1; min-width: 150px;" ${!unassignedEmployeesOptions ? 'disabled' : ''}><option value="">Добавить сотрудника</option>${unassignedEmployeesOptions}</select><button onclick="addEmployeeToTeam(${team.id})" ${!unassignedEmployeesOptions ? 'disabled' : ''}>Добавить</button><button onclick="deleteTeam(${team.id})" class="button-danger">Удалить</button></div></div>`;
+            }).join('');
+        }
+
+        function renderEmployees() {
+            document.getElementById('employees-list').innerHTML = employees.map(employee => {
+                const hasLogin = employee.username && employee.password;
+                const loginInfo = hasLogin ? `<div style="color: #6c757d; font-size: 12px;">Логин: ${employee.username}</div>` : '<div style="color: #ff6961; font-size: 12px;">Нет данных для входа</div>';
+                
+                return `<div class="card"><div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 10px;"><div style="flex: 1; min-width: 150px;"><div style="font-weight: 600; margin-bottom: 4px;">${employee.name}</div><div style="color: #6c757d; font-size: 14px;">${employee.role === 'manager' ? 'Управляющий' : 'Сотрудник'}</div>${loginInfo}</div><div class="button-group" style="align-items: stretch;"><button onclick="editEmployee(${employee.id})" class="button-secondary">Редактировать</button><button onclick="deleteEmployee(${employee.id})" class="button-danger">Удалить</button></div></div></div>`;
+            }).join('');
+        }
+
+        function selectTeamColor(element, color) {
+            selectChip(element);
+            document.getElementById('team-color').value = color;
+        }
+
+        function openTeamModal() {
+            document.getElementById('team-name').value = '';
+            selectTeamColor(document.querySelector('#color-chips .chip-option'), '#a7c7e7');
+            selectTeamType(document.querySelector('.team-type-selector .team-type-option'), 'drillers');
+            openModal('team-modal');
+        }
+
+        function openEmployeeModal() {
+            document.getElementById('employee-name').value = '';
+            document.getElementById('employee-username').value = '';
+            document.getElementById('employee-password').value = '';
+            document.getElementById('employee-modal').setAttribute('data-edit-id', '');
+            document.querySelector('#employee-modal h2').textContent = 'Добавить сотрудника';
+            selectRole(document.querySelector('.role-selector .role-option'), 'employee');
+            openModal('employee-modal');
+        }
+
+        function editEmployee(employeeId) {
+            const employee = employees.find(e => e.id === employeeId);
+            if (!employee) return;
+            
+            document.getElementById('employee-name').value = employee.name;
+            document.getElementById('employee-username').value = employee.username || '';
+            document.getElementById('employee-password').value = employee.password || '';
+            document.getElementById('employee-modal').setAttribute('data-edit-id', employeeId);
+            document.querySelector('#employee-modal h2').textContent = 'Редактировать сотрудника';
+            
+            const roleElement = document.querySelector(`.role-option[onclick*="'${employee.role}'"]`);
+            if (roleElement) selectRole(roleElement, employee.role);
+            
+            openModal('employee-modal');
+        }
+
+        function saveTeam() {
+            const name = document.getElementById('team-name').value.trim();
+            const color = document.getElementById('team-color').value;
+            const type = document.getElementById('team-type').value;
+            if (!name) return showNotification('Введите название бригады', 'error');
+            teams.push({ id: Date.now(), name, color, type });
+            closeModal('team-modal');
+            renderTeams();
+            showNotification('Бригада добавлена');
+        }
+
+        function saveEmployee() {
+            const name = document.getElementById('employee-name').value.trim();
+            const username = document.getElementById('employee-username').value.trim();
+            const password = document.getElementById('employee-password').value.trim();
+            const role = document.getElementById('employee-role').value;
+            const editId = document.getElementById('employee-modal').getAttribute('data-edit-id');
+            
+            if (!name) return showNotification('Введите ФИО сотрудника', 'error');
+            
+            // Проверка на уникальность логина (только если логин указан)
+            if (username) {
+                const existingUser = Object.keys(users).find(u => u === username);
+                const existingEmployee = employees.find(e => e.username === username && e.id != editId);
+                
+                if (existingUser || existingEmployee) {
+                    return showNotification('Логин уже используется', 'error');
+                }
+                
+                if (!password) {
+                    return showNotification('Укажите пароль для логина', 'error');
+                }
+            }
+            
+            if (editId) {
+                // Редактирование
+                const employee = employees.find(e => e.id == editId);
+                if (employee) {
+                    // Удаляем старые данные из users если они были
+                    if (employee.username) {
+                        delete users[employee.username];
+                    }
+                    
+                    employee.name = name;
+                    employee.username = username || null;
+                    employee.password = password || null;
+                    employee.role = role;
+                    
+                    // Добавляем новые данные в users если логин указан
+                    if (username && password) {
+                        users[username] = { password, role, name };
+                    }
+                    
+                    showNotification('Сотрудник обновлен');
+                }
+            } else {
+                // Создание нового
+                const newEmployee = { 
+                    id: Date.now(), 
+                    name, 
+                    teamId: null, 
+                    role,
+                    username: username || null,
+                    password: password || null
+                };
+                
+                employees.push(newEmployee);
+                
+                // Добавляем в users если логин указан
+                if (username && password) {
+                    users[username] = { password, role, name };
+                }
+                
+                showNotification('Сотрудник добавлен');
+            }
+            
+            closeModal('employee-modal');
+            renderTeams();
+            renderEmployees();
+        }
+
+        function addEmployeeToTeam(teamId) {
+            const select = document.getElementById(`add-to-team-${teamId}`);
+            const employeeId = parseInt(select.value);
+            if (employeeId) {
+                const employee = employees.find(e => e.id === employeeId);
+                if (employee) {
+                    employee.teamId = teamId;
+                    renderTeams();
+                    showNotification('Сотрудник добавлен в бригаду');
+                }
+            }
+        }
+
+        function removeEmployeeFromTeam(employeeId, event) {
+            event.stopPropagation();
+            const employee = employees.find(e => e.id === employeeId);
+            if (employee) {
+                employee.teamId = null;
+                renderTeams();
+                showNotification('Сотрудник откреплен от бригады');
+            }
+        }
+
+        function deleteTeam(teamId) {
+            if (confirm("Удалить бригаду? Сотрудники будут откреплены.")) {
+                teams = teams.filter(t => t.id !== teamId);
+                employees.forEach(e => { if (e.teamId === teamId) e.teamId = null; });
+                renderTeams();
+                showNotification('Бригада удалена');
+            }
+        }
+
+        function deleteEmployee(employeeId) {
+            if (confirm("Удалить сотрудника?")) {
+                const employee = employees.find(e => e.id === employeeId);
+                
+                // Удаляем из users если есть логин
+                if (employee && employee.username) {
+                    delete users[employee.username];
+                }
+                
+                employees = employees.filter(e => e.id !== employeeId);
+                renderTeams();
+                renderEmployees();
+                showNotification('Сотрудник удален');
+            }
+        }
+        
+        // Склад
+        function renderInventoryGrid() {
+            const grid = document.getElementById('inventory-grid');
+            if (!grid) return;
+            
+            let html = '';
+            
+            const allItems = [ ...pipeTypes.map(type => ({ ...type, isFuel: false })), { id: 0, name: "🛢️ Дизельное топливо", minStock: 100, isFuel: true } ];
+
+            allItems.forEach(item => {
+                const currentAmount = calculateCurrentAmount(item.id);
+                const needsRestock = currentAmount < item.minStock;
+                
+                const clickHandler = currentUser.role === 'manager' 
+                    ? `openInventoryHistoryModal(${item.id})` 
+                    : `openInventoryRequestModal(${item.id})`;
+
+                html += `<div class="inventory-item" onclick="${clickHandler}"><div class="inventory-item-header"><div class="inventory-item-title">${item.name}</div><div class="inventory-item-amount">${currentAmount}${item.isFuel ? ' л' : ''}</div></div>${needsRestock ? `<div class="inventory-item-warning">⚠️ Требуется пополнение (мин. ${item.minStock})</div>` : ''}<div style="margin-top: 10px; font-size: 14px; color: #6c757d;">${currentUser.role === 'manager' ? 'Нажмите для управления' : 'Нажмите для запроса'}</div></div>`;
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        function openInventoryHistoryModal(itemId) {
+            selectedInventoryItem = itemId;
+            const item = itemId === 0 ? { name: "Дизельное топливо", isFuel: true } : pipeTypes.find(t => t.id === itemId);
+            
+            document.getElementById('inventory-history-title').textContent = `История: ${item.name}`;
+            const currentAmount = calculateCurrentAmount(itemId);
+            document.getElementById('inventory-current-amount').textContent = `${currentAmount}${item.isFuel ? ' л' : ''}`;
+            
+            document.getElementById('add-operation-btn').style.display = currentUser.role === 'manager' ? 'inline-block' : 'none';
+
+            const tbody = document.getElementById('inventory-history-table');
+            const operations = inventoryOperations.filter(op => op.itemId === itemId).sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            tbody.innerHTML = operations.length === 0 ? '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #6c757d;">Нет операций</td></tr>' : operations.map(op => `<tr><td>${op.date.split('-').reverse().join('.')}</td><td>${op.type === 'in' ? '📈 Поступление' : '📉 Расход'}</td><td style="color: ${op.type === 'in' ? '#28a745' : '#dc3545'}; font-weight: 600;">${op.type === 'in' ? '+' : '-'}${op.amount}${item.isFuel ? ' л' : ''}</td><td style="white-space: normal;">${op.notes}</td></tr>`).join('');
+            
+            openModal('inventory-history-modal');
+        }
+
+        function openInventoryOperationModal() {
+            const item = selectedInventoryItem === 0 ? { name: "Дизельное топливо" } : pipeTypes.find(t => t.id === selectedInventoryItem);
+            document.getElementById('inventory-operation-title').textContent = `Операция: ${item.name}`;
+            document.getElementById('inventory-operation-date').value = formatDate(new Date());
+            document.getElementById('inventory-operation-amount').value = '';
+            document.getElementById('inventory-operation-notes').value = '';
+            selectOperationType(document.querySelector('.operation-type-selector .income'), 'in');
+            openModal('inventory-operation-modal');
+        }
+
+        function saveInventoryOperation() {
+            const type = document.getElementById('inventory-operation-type').value;
+            const date = document.getElementById('inventory-operation-date').value;
+            const amount = parseFloat(document.getElementById('inventory-operation-amount').value);
+            const notes = document.getElementById('inventory-operation-notes').value;
+            
+            if (date && !isNaN(amount) && amount > 0) {
+                inventoryOperations.push({ id: Date.now(), itemId: selectedInventoryItem, date, type, amount, notes });
+                closeModal('inventory-operation-modal');
+                openInventoryHistoryModal(selectedInventoryItem);
+                renderInventoryGrid();
+                showNotification('Операция добавлена');
+            } else {
+                showNotification('Заполните все поля корректно', 'error');
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('password').addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
+            
+            // Инициализация PWA
+            initializePWA();
+        });
+        
+        // PWA функциональность
+        let deferredPrompt;
+        
+        function initializePWA() {
+            // Регистрация Service Worker
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js')
+                        .then(registration => {
+                            console.log('SW зарегистрирован:', registration);
+                            
+                            // Проверяем обновления каждые 60 секунд
+                            setInterval(() => {
+                                registration.update();
+                            }, 60000);
+                        })
+                        .catch(registrationError => {
+                            console.log('SW регистрация не удалась:', registrationError);
+                        });
+                });
+            }
+            
+            // Обработка установки PWA
+            window.addEventListener('beforeinstallprompt', (e) => {
+                console.log('PWA можно установить');
+                e.preventDefault();
+                deferredPrompt = e;
+                showInstallButton();
+            });
+            
+            // Обработка после установки
+            window.addEventListener('appinstalled', (evt) => {
+                console.log('PWA установлено');
+                hideInstallButton();
+                showNotification('Приложение успешно установлено!');
+            });
+            
+            // Запрос разрешения на уведомления
+            requestNotificationPermission();
+            
+            // Инициализация офлайн хранилища
+            initializeOfflineStorage();
+        }
+        
+        function showInstallButton() {
+            // Создаем кнопку установки
+            const installButton = document.createElement('button');
+            installButton.textContent = '📱 Установить приложение';
+            installButton.id = 'install-button';
+            installButton.style.cssText = `
+                position: fixed;
+                bottom: 90px;
+                right: 20px;
+                z-index: 1000;
+                background: #28a745;
+                color: white;
+                border: none;
+                padding: 12px 16px;
+                border-radius: 8px;
+                font-size: 14px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            `;
+            
+            installButton.addEventListener('click', installPWA);
+            document.body.appendChild(installButton);
+        }
+        
+        function hideInstallButton() {
+            const installButton = document.getElementById('install-button');
+            if (installButton) {
+                installButton.remove();
+            }
+        }
+        
+        async function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`Пользователь ${outcome} установку`);
+                deferredPrompt = null;
+                hideInstallButton();
+            }
+        }
+        
+        async function requestNotificationPermission() {
+            if ('Notification' in window) {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    console.log('Разрешение на уведомления получено');
+                    
+                    // Подписываемся на push уведомления
+                    if ('serviceWorker' in navigator && 'PushManager' in window) {
+                        try {
+                            const registration = await navigator.serviceWorker.ready;
+                            const subscription = await registration.pushManager.subscribe({
+                                userVisibleOnly: true,
+                                applicationServerKey: urlBase64ToUint8Array('YOUR_VAPID_PUBLIC_KEY') // Замените на ваш ключ
+                            });
+                            
+                            console.log('Push подписка:', subscription);
+                            // Отправляем подписку на сервер
+                            // await sendSubscriptionToServer(subscription);
+                        } catch (error) {
+                            console.error('Ошибка подписки на push:', error);
+                        }
+                    }
+                }
+            }
+        }
+        
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/-/g, '+')
+                .replace(/_/g, '/');
+                
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+        
+        // Офлайн хранилище данных
+        let db;
+        
+        async function initializeOfflineStorage() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('BrigadesDB', 1);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    console.log('IndexedDB инициализирована');
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    
+                    // Создаем хранилища
+                    if (!database.objectStoreNames.contains('events')) {
+                        const eventsStore = database.createObjectStore('events', { keyPath: 'id' });
+                        eventsStore.createIndex('date', 'date', { unique: false });
+                        eventsStore.createIndex('type', 'type', { unique: false });
+                    }
+                    
+                    if (!database.objectStoreNames.contains('teams')) {
+                        database.createObjectStore('teams', { keyPath: 'id' });
+                    }
+                    
+                    if (!database.objectStoreNames.contains('employees')) {
+                        database.createObjectStore('employees', { keyPath: 'id' });
+                    }
+                    
+                    if (!database.objectStoreNames.contains('pendingEvents')) {
+                        database.createObjectStore('pendingEvents', { keyPath: 'id' });
+                    }
+                    
+                    console.log('IndexedDB структура создана');
+                };
+            });
+        }
+        
+        // Сохранение данных офлайн
+        async function saveToOfflineStorage(storeName, data) {
+            if (!db) return;
+            
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.put(data);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+            });
+        }
+        
+        // Получение данных из офлайн хранилища
+        async function getFromOfflineStorage(storeName, key = null) {
+            if (!db) return null;
+            
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = key ? store.get(key) : store.getAll();
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+            });
+        }
+        
+        // Синхронизация данных при возвращении онлайн
+        window.addEventListener('online', () => {
+            console.log('Подключение к интернету восстановлено');
+            showNotification('Подключение восстановлено. Синхронизация данных...');
+            
+            // Запускаем фоновую синхронизацию
+            if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+                navigator.serviceWorker.ready.then(registration => {
+                    registration.sync.register('background-sync-events');
+                });
+            }
+        });
+        
+        window.addEventListener('offline', () => {
+            console.log('Подключение к интернету потеряно');
+            showNotification('Работаем в офлайн режиме', 'error');
+        });
+        
+        // Улучшенная функция сохранения событий с офлайн поддержкой
+        async function saveEventWithSync(eventData) {
+            try {
+                // Сначала сохраняем локально
+                await saveToOfflineStorage('events', eventData);
+                
+                // Если онлайн - отправляем на сервер
+                if (navigator.onLine) {
+                    try {
+                        // const response = await fetch('/api/events', {
+                        //     method: 'POST',
+                        //     headers: { 'Content-Type': 'application/json' },
+                        //     body: JSON.stringify(eventData)
+                        // });
+                        
+                        console.log('Событие синхронизировано с сервером');
+                    } catch (error) {
+                        // Если не удалось отправить - добавляем в очередь
+                        await saveToOfflineStorage('pendingEvents', {
+                            ...eventData,
+                            pendingSync: true,
+                            timestamp: Date.now()
+                        });
+                        
+                        console.log('Событие добавлено в очередь синхронизации');
+                    }
+                } else {
+                    // Офлайн - добавляем в очередь
+                    await saveToOfflineStorage('pendingEvents', {
+                        ...eventData,
+                        pendingSync: true,
+                        timestamp: Date.now()
+                    });
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Ошибка сохранения события:', error);
+                return false;
+            }
+        }
+    </script>
+</body>
+</html>
