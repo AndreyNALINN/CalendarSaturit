@@ -410,22 +410,143 @@
 
     async function saveEntity(collectionName, data) {
         try {
-            if (editedEntity.id) { // Редактирование
+            if (editedEntity && editedEntity.id) {
                 await window.firebase.db.updateDoc(window.firebase.db.doc(window.db, collectionName, editedEntity.id), data);
                 showNotification('Данные обновлены');
-            } else { // Создание
+            } else {
                 await window.firebase.db.addDoc(window.firebase.db.collection(window.db, collectionName), data);
                 showNotification('Данные добавлены');
             }
-        } catch (error) { showNotification('Ошибка сохранения', 'error'); }
+        } catch (error) { showNotification('Ошибка сохранения', 'error'); console.error(error); }
     }
     
     async function deleteEntity(collectionName, docId) {
         if (!confirm('Вы уверены, что хотите удалить эту запись?')) return;
         try {
             await window.firebase.db.deleteDoc(window.firebase.db.doc(window.db, collectionName, docId));
+            if (collectionName === 'events') {
+                closeModal('day-details-modal');
+            }
             showNotification('Запись удалена');
         } catch (error) { showNotification('Ошибка удаления', 'error'); }
+    }
+
+    // ==================================================================
+    // УПРАВЛЕНИЕ СОБЫТИЯМИ (КАЛЕНДАРЬ) -- НОВЫЙ БЛОК
+    // ==================================================================
+    function openDayDetailsModal(date) {
+        selectedDate = date;
+        const workEventsOnDay = events.filter(e => e.date === date && ['drilling', 'installation', 'trip'].includes(e.type));
+        const vacationEventsOnDay = events.filter(e => e.type === 'vacation' && e.startDate <= date && e.endDate >= date);
+        const allEventsOnDay = [...workEventsOnDay, ...vacationEventsOnDay].sort((a,b) => (a.teamId || a.employeeId).localeCompare(b.teamId || b.employeeId));
+
+        const [y, m, d] = date.split('-').map(Number);
+        const displayDate = new Date(y, m - 1, d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+        const eventsHtml = allEventsOnDay.length > 0 ? allEventsOnDay.map(event => {
+            const isVacation = event.type === 'vacation';
+            const title = isVacation ? `Отпуск: ${getEmployeeName(event.employeeId)}` : `${getEventTypeName(event.type)}: ${getTeamName(event.teamId)}`;
+            const details = isVacation ? `c ${formatDate(new Date(event.startDate))} по ${formatDate(new Date(event.endDate))}` : event.address;
+            const adminButtons = currentUser.role === 'manager' ? `
+                <div style="display:flex; gap:8px; margin-left:auto; align-items:center;">
+                    <button style="padding:6px 10px; font-size:12px; min-height:0;" class="button-secondary" onclick="openEventModal('${event.id}')">✏️</button>
+                    <button style="padding:6px 10px; font-size:12px; min-height:0;" class="button-danger" onclick="deleteEntity('events', '${event.id}')">🗑️</button>
+                </div>` : '';
+            return `<div class="day-event-item ${isVacation ? 'vacation' : ''}">
+                        <div><strong style="display:block;">${title}</strong><small style="color:#6c757d;">${details || ' '}</small></div>
+                        ${adminButtons}
+                    </div>`;
+        }).join('') : '<p style="text-align:center; color:#6c757d; padding: 20px 0;">Событий не запланировано.</p>';
+
+        let footerButtons = `<button class="button-secondary" onclick="closeModal('day-details-modal')">Закрыть</button>`;
+        if (currentUser.role === 'manager') {
+            footerButtons += `<button onclick="openEventModal()">Добавить событие</button>`;
+        }
+        
+        createModal('day-details-modal', {
+            title: `События на ${displayDate}`,
+            body: `<div class="day-events-list">${eventsHtml}</div>`,
+            footer: footerButtons
+        });
+    }
+
+    function openEventModal(eventId = null) {
+        editedEntity = eventId ? events.find(e => e.id === eventId) : null;
+        const isEditing = !!editedEntity;
+        const eventData = editedEntity || {};
+
+        const eventTypes = { drilling: 'Бурение', installation: 'Монтаж', trip: 'Поездка', vacation: 'Отпуск' };
+        const eventTypeOptions = Object.entries(eventTypes).map(([key, value]) => 
+            `<button class="event-type-option ${(eventData.type || 'drilling') === key ? 'selected' : ''}" 
+                     onclick="selectModalOption(this, 'event-type-option', '#event-type', '${key}'); toggleEventFormFields('${key}');">
+                ${value}
+            </button>`
+        ).join('');
+        
+        const teamsOptions = teams.map(t => `<option value="${t.id}" ${eventData.teamId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
+        const employeesOptions = employees.map(e => `<option value="${e.id}" ${eventData.employeeId === e.id ? 'selected' : ''}>${e.name}</option>`).join('');
+
+        const body = `
+            <div class="form-group">
+                <label>Тип события</label>
+                <div class="event-type-selector">${eventTypeOptions}</div>
+                <input type="hidden" id="event-type" value="${eventData.type || 'drilling'}">
+            </div>
+            
+            <div id="work-event-fields">
+                <div class="form-group"><label for="event-date">Дата</label><input type="date" id="event-date" value="${eventData.date || selectedDate}"></div>
+                <div class="form-group"><label for="event-team">Бригада</label><select id="event-team">${teamsOptions}</select></div>
+                <div class="form-group"><label for="event-address">Адрес</label><input type="text" id="event-address" value="${eventData.address || ''}" placeholder="ул. Примерная, д. 1"></div>
+            </div>
+
+            <div id="vacation-event-fields" style="display:none;">
+                <div class="form-group"><label for="event-employee">Сотрудник</label><select id="event-employee">${employeesOptions}</select></div>
+                <div class="form-group"><label for="event-start-date">Дата начала</label><input type="date" id="event-start-date" value="${eventData.startDate || selectedDate}"></div>
+                <div class="form-group"><label for="event-end-date">Дата окончания</label><input type="date" id="event-end-date" value="${eventData.endDate || selectedDate}"></div>
+            </div>
+        `;
+        
+        createModal('event-modal', {
+            title: isEditing ? 'Редактировать событие' : 'Добавить событие',
+            body: body,
+            footer: `<button class="button-secondary" onclick="closeModal('event-modal')">Отмена</button><button onclick="saveEvent()">Сохранить</button>`
+        });
+        
+        toggleEventFormFields(eventData.type || 'drilling');
+        closeModal('day-details-modal');
+    }
+
+    function toggleEventFormFields(type) {
+        const workFields = document.getElementById('work-event-fields');
+        const vacationFields = document.getElementById('vacation-event-fields');
+        if (type === 'vacation') {
+            workFields.style.display = 'none';
+            vacationFields.style.display = 'block';
+        } else {
+            workFields.style.display = 'block';
+            vacationFields.style.display = 'none';
+        }
+    }
+
+    async function saveEvent() {
+        const type = document.getElementById('event-type').value;
+        let eventData = { type };
+
+        if (type === 'vacation') {
+            eventData.employeeId = document.getElementById('event-employee').value;
+            eventData.startDate = document.getElementById('event-start-date').value;
+            eventData.endDate = document.getElementById('event-end-date').value;
+            if (!eventData.employeeId || !eventData.startDate || !eventData.endDate) return showNotification('Заполните все поля для отпуска', 'error');
+            if (eventData.startDate > eventData.endDate) return showNotification('Дата начала не может быть позже даты окончания', 'error');
+        } else {
+            eventData.date = document.getElementById('event-date').value;
+            eventData.teamId = document.getElementById('event-team').value;
+            eventData.address = document.getElementById('event-address').value.trim();
+            if (!eventData.date || !eventData.teamId) return showNotification('Укажите дату и бригаду', 'error');
+        }
+
+        await saveEntity('events', eventData);
+        closeModal('event-modal');
     }
 
     // ==================================================================
@@ -433,10 +554,14 @@
     // ==================================================================
     function showNotification(message, type = 'success') { const el = document.createElement('div'); el.className = 'notification'; el.textContent = message; if (type === 'error') el.style.background = '#ff3b30'; document.body.appendChild(el); setTimeout(() => el.remove(), 3000); }
     function formatDate(d) { d = new Date(d); return [d.getFullYear(), `${d.getMonth()+1}`.padStart(2,'0'), `${d.getDate()}`.padStart(2,'0')].join('-'); }
-    function getMonthName(d) { return d.toLocaleString('ru-RU', { month: 'long', year: 'numeric' }); }
+    function getMonthName(d) { return d.toLocaleString('ru-RU', { month: 'long', year: 'numeric' }).replace(' г.', ''); }
     function getTeamName(id) { return teams.find(t => t.id === id)?.name || "?"; }
     function getTeamColor(id) { return teams.find(t => t.id === id)?.color || "#ccc"; }
     function getEmployeeName(id) { return employees.find(e => e.id === id)?.name || "?"; }
+    function getEventTypeName(type) {
+        const types = { 'drilling': 'Бурение', 'installation': 'Монтаж', 'trip': 'Поездка', 'vacation': 'Отпуск' };
+        return types[type] || type;
+    }
     
     function createModal(id, content) {
         let modal = document.getElementById(id);
@@ -453,6 +578,10 @@
         element.parentElement.querySelectorAll(`.${optionClass}`).forEach(opt => opt.classList.remove('selected'));
         element.classList.add('selected');
         document.querySelector(hiddenInputSelector).value = value;
+        // Для динамической формы событий
+        if(typeof window.toggleEventFormFields === 'function' && optionClass === 'event-type-option') {
+            toggleEventFormFields(value);
+        }
     }
 
     function openModal(id) { let el = document.getElementById(id); if (el) el.style.display = 'flex'; }
@@ -491,7 +620,11 @@
     window.saveEmployee = saveEmployee;
     window.deleteEntity = deleteEntity;
     window.selectModalOption = selectModalOption;
-    // ... и другие функции, вызываемые из HTML
+    // --- НОВЫЕ ГЛОБАЛЬНЫЕ ФУНКЦИИ ---
+    window.openDayDetailsModal = openDayDetailsModal;
+    window.openEventModal = openEventModal;
+    window.saveEvent = saveEvent;
+    window.toggleEventFormFields = toggleEventFormFields;
     </script>
 </body>
 </html>
