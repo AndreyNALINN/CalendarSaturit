@@ -1,0 +1,183 @@
+name: Add PWA Support
+
+on:
+  workflow_dispatch: # Ручной запуск
+
+jobs:
+  add-pwa:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      
+    - name: Create manifest.json
+      run: |
+        cat > manifest.json << 'EOF'
+        {
+          "name": "Управление бригадами и складом",
+          "short_name": "Бригады",
+          "description": "Система управления бригадами, складом и планирования работ",
+          "start_url": "/",
+          "display": "standalone",
+          "background_color": "#667eea",
+          "theme_color": "#667eea",
+          "orientation": "portrait-primary",
+          "icons": [
+            {
+              "src": "icon-192.png",
+              "sizes": "192x192",
+              "type": "image/png",
+              "purpose": "maskable any"
+            },
+            {
+              "src": "icon-512.png", 
+              "sizes": "512x512",
+              "type": "image/png",
+              "purpose": "maskable any"
+            }
+          ]
+        }
+        EOF
+        
+    - name: Create service worker
+      run: |
+        cat > sw.js << 'EOF'
+        const CACHE_NAME = 'brigades-app-v1.0.0';
+        const STATIC_CACHE_URLS = ['/', '/index.html', '/manifest.json'];
+        
+        self.addEventListener('install', event => {
+          event.waitUntil(
+            caches.open(CACHE_NAME)
+              .then(cache => cache.addAll(STATIC_CACHE_URLS))
+              .then(() => self.skipWaiting())
+          );
+        });
+        
+        self.addEventListener('activate', event => {
+          event.waitUntil(
+            caches.keys().then(cacheNames => {
+              return Promise.all(
+                cacheNames.map(cacheName => {
+                  if (cacheName !== CACHE_NAME) {
+                    return caches.delete(cacheName);
+                  }
+                })
+              );
+            }).then(() => self.clients.claim())
+          );
+        });
+        
+        self.addEventListener('fetch', event => {
+          if (event.request.method !== 'GET') return;
+          
+          event.respondWith(
+            caches.match(event.request)
+              .then(cachedResponse => {
+                if (cachedResponse) return cachedResponse;
+                
+                return fetch(event.request)
+                  .then(response => {
+                    if (!response || response.status !== 200) return response;
+                    
+                    const responseToCache = response.clone();
+                    caches.open(CACHE_NAME)
+                      .then(cache => cache.put(event.request, responseToCache));
+                    
+                    return response;
+                  })
+                  .catch(() => caches.match('/'));
+              })
+          );
+        });
+        EOF
+        
+    - name: Create default icons
+      run: |
+        # Создаем базовые иконки
+        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==" | base64 -d > temp.png
+        convert temp.png -resize 192x192 -background "#667eea" -gravity center icon-192.png 2>/dev/null || curl -s "https://via.placeholder.com/192x192/667eea/ffffff.png?text=📱" -o icon-192.png
+        convert temp.png -resize 512x512 -background "#667eea" -gravity center icon-512.png 2>/dev/null || curl -s "https://via.placeholder.com/512x512/667eea/ffffff.png?text=📱" -o icon-512.png
+        rm -f temp.png
+        
+    - name: Modify HTML for PWA
+      run: |
+        # Добавляем PWA мета-теги в head
+        if grep -q "manifest.json" index.html; then
+          echo "PWA meta tags already exist"
+        else
+          sed -i '/<title>/a \
+        <!-- PWA Meta tags -->\
+        <meta name="apple-mobile-web-app-capable" content="yes">\
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\
+        <meta name="apple-mobile-web-app-title" content="Бригады">\
+        <meta name="mobile-web-app-capable" content="yes">\
+        <meta name="msapplication-TileColor" content="#667eea">\
+        <link rel="manifest" href="manifest.json">\
+        <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">' index.html
+        fi
+        
+        # Добавляем PWA JavaScript перед закрывающим </body>
+        if grep -q "initializePWA" index.html; then
+          echo "PWA JavaScript already exists"
+        else
+          sed -i '/<\/body>/i \
+        <script>\
+        // PWA инициализация\
+        function initializePWA() {\
+            if ("serviceWorker" in navigator) {\
+                navigator.serviceWorker.register("/sw.js")\
+                    .then(registration => console.log("SW зарегистрирован:", registration))\
+                    .catch(error => console.log("SW ошибка:", error));\
+            }\
+            \
+            let deferredPrompt;\
+            window.addEventListener("beforeinstallprompt", (e) => {\
+                e.preventDefault();\
+                deferredPrompt = e;\
+                \
+                const installBtn = document.createElement("button");\
+                installBtn.textContent = "📱 Установить приложение";\
+                installBtn.id = "pwa-install-btn";\
+                installBtn.style.cssText = "position: fixed; bottom: 90px; right: 20px; z-index: 1000; background: #28a745; color: white; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);";\
+                \
+                installBtn.onclick = async () => {\
+                    if (deferredPrompt) {\
+                        deferredPrompt.prompt();\
+                        const { outcome } = await deferredPrompt.userChoice;\
+                        console.log("Установка:", outcome);\
+                        deferredPrompt = null;\
+                        installBtn.remove();\
+                    }\
+                };\
+                \
+                document.body.appendChild(installBtn);\
+            });\
+            \
+            window.addEventListener("appinstalled", () => {\
+                console.log("PWA установлено!");\
+                const installBtn = document.getElementById("pwa-install-btn");\
+                if (installBtn) installBtn.remove();\
+            });\
+        }\
+        \
+        // Запускаем после загрузки DOM\
+        if (document.readyState === "loading") {\
+            document.addEventListener("DOMContentLoaded", initializePWA);\
+        } else {\
+            initializePWA();\
+        }\
+        </script>' index.html
+        fi
+        
+    - name: Commit changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action PWA"
+        git add .
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "🚀 Add PWA support: manifest, service worker, icons, install button"
+          git push
+        fi
