@@ -1,7 +1,7 @@
-name: Add PWA Support
+name: Add PWA Support (Fixed)
 
 on:
-  workflow_dispatch: # Ручной запуск
+  workflow_dispatch:
 
 jobs:
   add-pwa:
@@ -17,7 +17,7 @@ jobs:
         {
           "name": "Управление бригадами и складом",
           "short_name": "Бригады",
-          "description": "Система управления бригадами, складом и планирования работ",
+          "description": "Система управления бригадами и складом",
           "start_url": "/",
           "display": "standalone",
           "background_color": "#667eea",
@@ -25,16 +25,16 @@ jobs:
           "orientation": "portrait-primary",
           "icons": [
             {
-              "src": "icon-192.png",
+              "src": "https://via.placeholder.com/192x192/667eea/ffffff.png?text=📱",
               "sizes": "192x192",
               "type": "image/png",
-              "purpose": "maskable any"
+              "purpose": "any maskable"
             },
             {
-              "src": "icon-512.png", 
+              "src": "https://via.placeholder.com/512x512/667eea/ffffff.png?text=📱",
               "sizes": "512x512",
               "type": "image/png",
-              "purpose": "maskable any"
+              "purpose": "any maskable"
             }
           ]
         }
@@ -47,14 +47,19 @@ jobs:
         const STATIC_CACHE_URLS = ['/', '/index.html', '/manifest.json'];
         
         self.addEventListener('install', event => {
+          console.log('Service Worker installing...');
           event.waitUntil(
             caches.open(CACHE_NAME)
-              .then(cache => cache.addAll(STATIC_CACHE_URLS))
+              .then(cache => {
+                console.log('Opened cache');
+                return cache.addAll(STATIC_CACHE_URLS);
+              })
               .then(() => self.skipWaiting())
           );
         });
         
         self.addEventListener('activate', event => {
+          console.log('Service Worker activating...');
           event.waitUntil(
             caches.keys().then(cacheNames => {
               return Promise.all(
@@ -74,38 +79,37 @@ jobs:
           event.respondWith(
             caches.match(event.request)
               .then(cachedResponse => {
-                if (cachedResponse) return cachedResponse;
+                if (cachedResponse) {
+                  return cachedResponse;
+                }
                 
                 return fetch(event.request)
                   .then(response => {
-                    if (!response || response.status !== 200) return response;
+                    if (!response || response.status !== 200 || response.type !== 'basic') {
+                      return response;
+                    }
                     
                     const responseToCache = response.clone();
                     caches.open(CACHE_NAME)
-                      .then(cache => cache.put(event.request, responseToCache));
+                      .then(cache => {
+                        cache.put(event.request, responseToCache);
+                      });
                     
                     return response;
                   })
-                  .catch(() => caches.match('/'));
+                  .catch(() => {
+                    return caches.match('/');
+                  });
               })
           );
         });
         EOF
         
-    - name: Create default icons
-      run: |
-        # Создаем базовые иконки
-        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==" | base64 -d > temp.png
-        convert temp.png -resize 192x192 -background "#667eea" -gravity center icon-192.png 2>/dev/null || curl -s "https://via.placeholder.com/192x192/667eea/ffffff.png?text=📱" -o icon-192.png
-        convert temp.png -resize 512x512 -background "#667eea" -gravity center icon-512.png 2>/dev/null || curl -s "https://via.placeholder.com/512x512/667eea/ffffff.png?text=📱" -o icon-512.png
-        rm -f temp.png
-        
     - name: Modify HTML for PWA
       run: |
-        # Добавляем PWA мета-теги в head
-        if grep -q "manifest.json" index.html; then
-          echo "PWA meta tags already exist"
-        else
+        # Проверяем есть ли уже PWA теги
+        if ! grep -q "manifest.json" index.html; then
+          # Добавляем PWA мета-теги в head
           sed -i '/<title>/a \
         <!-- PWA Meta tags -->\
         <meta name="apple-mobile-web-app-capable" content="yes">\
@@ -113,26 +117,31 @@ jobs:
         <meta name="apple-mobile-web-app-title" content="Бригады">\
         <meta name="mobile-web-app-capable" content="yes">\
         <meta name="msapplication-TileColor" content="#667eea">\
-        <link rel="manifest" href="manifest.json">\
-        <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">' index.html
+        <link rel="manifest" href="manifest.json">' index.html
         fi
         
-        # Добавляем PWA JavaScript перед закрывающим </body>
-        if grep -q "initializePWA" index.html; then
-          echo "PWA JavaScript already exists"
-        else
+        # Добавляем PWA JavaScript если его еще нет
+        if ! grep -q "initializePWA" index.html; then
           sed -i '/<\/body>/i \
         <script>\
         // PWA инициализация\
         function initializePWA() {\
+            console.log("Initializing PWA...");\
+            \
             if ("serviceWorker" in navigator) {\
                 navigator.serviceWorker.register("/sw.js")\
-                    .then(registration => console.log("SW зарегистрирован:", registration))\
-                    .catch(error => console.log("SW ошибка:", error));\
+                    .then(registration => {\
+                        console.log("SW registered:", registration);\
+                    })\
+                    .catch(error => {\
+                        console.log("SW registration failed:", error);\
+                    });\
             }\
             \
             let deferredPrompt;\
+            \
             window.addEventListener("beforeinstallprompt", (e) => {\
+                console.log("beforeinstallprompt fired");\
                 e.preventDefault();\
                 deferredPrompt = e;\
                 \
@@ -145,7 +154,7 @@ jobs:
                     if (deferredPrompt) {\
                         deferredPrompt.prompt();\
                         const { outcome } = await deferredPrompt.userChoice;\
-                        console.log("Установка:", outcome);\
+                        console.log("Install outcome:", outcome);\
                         deferredPrompt = null;\
                         installBtn.remove();\
                     }\
@@ -155,13 +164,13 @@ jobs:
             });\
             \
             window.addEventListener("appinstalled", () => {\
-                console.log("PWA установлено!");\
+                console.log("PWA installed successfully!");\
                 const installBtn = document.getElementById("pwa-install-btn");\
                 if (installBtn) installBtn.remove();\
             });\
         }\
         \
-        // Запускаем после загрузки DOM\
+        // Запускаем PWA инициализацию\
         if (document.readyState === "loading") {\
             document.addEventListener("DOMContentLoaded", initializePWA);\
         } else {\
@@ -178,6 +187,6 @@ jobs:
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
-          git commit -m "🚀 Add PWA support: manifest, service worker, icons, install button"
+          git commit -m "🚀 Add PWA support: manifest, service worker, install functionality"
           git push
         fi
