@@ -2,7 +2,7 @@
   "name": "Управление бригадами и складом",
   "short_name": "Бригады",
   "description": "Система управления бригадами и складом",
-  "start_url": "/",
+  "start_url": "/CalendarSaturit/",
   "display": "standalone",
   "background_color": "#667eea",
   "theme_color": "#667eea",
