@@ -3056,6 +3056,128 @@
             }
         }
     </script>
-<script src="pwa-fixes.js"></script>
+<script>
+// PWA исправления - встроенная версия
+console.log('Loading PWA fixes...');
+
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        console.log('Applying PWA fixes...');
+        
+        // Исправляем обводку сегодняшнего дня
+        const today = document.querySelector('.calendar-day.today');
+        if (today) {
+            today.style.position = 'relative';
+            today.style.zIndex = '100';
+            today.style.boxShadow = 'inset 0 0 0 3px #007aff !important';
+            console.log('Today highlight fixed');
+        }
+        
+        // Добавляем кнопку отчетов для управляющих
+        if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'manager') {
+            addReportsButton();
+        }
+        
+        // Исправляем тумблер
+        fixToggleSlider();
+        
+    }, 3000); // Ждем 3 секунды для полной загрузки
+});
+
+function addReportsButton() {
+    const upcomingEvents = document.querySelector('.upcoming-events');
+    if (upcomingEvents && !document.getElementById('reports-btn')) {
+        const reportsBtn = document.createElement('button');
+        reportsBtn.id = 'reports-btn';
+        reportsBtn.textContent = '📊 Отчет';
+        reportsBtn.style.cssText = `
+            position: absolute;
+            top: 15px;
+            right: 70px;
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            z-index: 1000;
+            cursor: pointer;
+        `;
+        reportsBtn.onclick = generateQuickReport;
+        upcomingEvents.style.position = 'relative';
+        upcomingEvents.appendChild(reportsBtn);
+        console.log('Reports button added');
+    }
+}
+
+function fixToggleSlider() {
+    const toggle = document.getElementById('vacation-toggle');
+    if (toggle) {
+        const slider = toggle.querySelector('.toggle-slider');
+        if (slider && toggle.classList.contains('active')) {
+            slider.style.transform = 'translateX(18px)';
+        }
+    }
+}
+
+function generateQuickReport() {
+    try {
+        const today = new Date();
+        const weekAgo = new Date();
+        weekAgo.setDate(today.getDate() - 7);
+        
+        let csvContent = 'Еженедельный отчет\n';
+        csvContent += 'Период,' + formatDate(weekAgo) + ' - ' + formatDate(today) + '\n\n';
+        csvContent += 'Дата,Тип события,Бригада,Адрес\n';
+        
+        // Фильтруем события за неделю
+        const recentEvents = events.filter(event => {
+            const eventDate = new Date(event.date || event.startDate);
+            return eventDate >= weekAgo && eventDate <= today;
+        });
+        
+        recentEvents.forEach(event => {
+            const date = event.date || event.startDate;
+            const type = getEventTypeName(event.type);
+            const team = event.teamId ? getTeamName(event.teamId) : getEmployeeName(event.employeeId);
+            const address = event.address || 'Отпуск';
+            csvContent += `${date},${type},${team},"${address}"\n`;
+        });
+        
+        csvContent += `\nВсего событий,${recentEvents.length}\n`;
+        csvContent += `Активных бригад,${teams.length}\n`;
+        csvContent += `Сотрудников,${employees.length}\n`;
+        
+        // Скачиваем файл
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `Отчет_${formatDate(today)}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showNotification('Отчет скачан!');
+        
+    } catch (error) {
+        console.error('Ошибка создания отчета:', error);
+        showNotification('Ошибка создания отчета', 'error');
+    }
+}
+
+function getEventTypeName(type) {
+    const types = {
+        'drilling': 'Бурение',
+        'installation': 'Монтаж',
+        'trip': 'Поездка', 
+        'vacation': 'Отпуск'
+    };
+    return types[type] || type;
+}
+
+console.log('PWA fixes script loaded');
+</script>
 </body>
 </html>
