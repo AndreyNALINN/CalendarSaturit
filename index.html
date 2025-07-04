@@ -25,10 +25,56 @@
     
     <title>Управление бригадами и складом</title>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <!-- index.html -> <head> -->
+<!-- ВСТАВЬТЕ ЭТИ СТРОЧКИ -->
+<script type="module">
+  // Импортируем только то, что нам нужно - это экономит трафик и ускоряет загрузку
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+  import { getFirestore, collection, onSnapshot, doc, getDoc, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+
+  // !!! ШАГ 3: ВАША КОНФИГУРАЦИЯ FIREBASE !!!
+  // Вот куда вы вставляете свой объект firebaseConfig
+  const firebaseConfig = {
+    apiKey: "AIzaSyCsWfzOoerj6TiM2am46reV42CQ0OE7TM8",
+    authDomain: "calendarsaturit.firebaseapp.com",
+    projectId: "calendarsaturit",
+    storageBucket: "calendarsaturit.appspot.com", // <-- проверьте, что тут нет ".firebasestorage."
+    messagingSenderId: "286002422636",
+    appId: "1:286002422636:web:58b626bffddfb64b060949",
+    measurementId: "G-8GC7ZJ94TW"
+  };
+
+  // Инициализация Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // Делаем ключевые переменные и функции доступными для всего остального кода
+  // (так как наш основной код не находится внутри <script type="module">)
+  window.db = db;
+  window.auth = auth;
+  window.firebase = {
+      db: {
+          collection,
+          onSnapshot,
+          doc,
+          getDoc,
+          addDoc,
+          updateDoc,
+          deleteDoc
+      },
+      auth: {
+          onAuthStateChanged,
+          signInWithEmailAndPassword,
+          signOut
+      }
+  };
+
+  // Запускаем главный слушатель авторизации
+  setupAuthListener();
+
+</script>
 
     <style>
         :root {
